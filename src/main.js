@@ -5,7 +5,8 @@ import { DRACOLoader } from 'three/addons/loaders/DRACOLoader.js';
 import './style.css';
 import { findStructureFact } from './structure-facts.js';
 import { networks } from './networks.js';
-import { tracts } from './tracts.js';\nimport { modalities } from './neuroimaging.js';
+import { tracts } from './tracts.js';
+import { modalities } from './neuroimaging.js';
 import { clinicalCases } from './clinical-cases.js';
 
 const MODEL_URL='https://raw.githubusercontent.com/itayinbarr/brainproject/2929e94f521a8ddceab26bc100a98dc06b0da060/brain-atlas/models/brain.glb';
@@ -99,7 +100,8 @@ function registerModel(gltf){
  renderSearch('');
  renderLayerControls();
  renderNetworkExplorer();
- renderTractExplorer();\n renderNeuroimagingExplorer();
+ renderTractExplorer();
+ renderNeuroimagingExplorer();
  renderClinicalCaseExplorer();
 }
 
