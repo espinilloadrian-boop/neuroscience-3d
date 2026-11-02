@@ -17,6 +17,7 @@ import { cognitiveDomains } from './cognitive-domains.js';
 import { neurochemicalSystems } from './neurochemistry.js';
 import { physiologyTopics } from './neurophysiology.js';
 import { simulationModels } from './simulations.js';
+import { clinicalPharmacology } from './clinical-pharmacology.js';
 
 const MODEL_URL='https://raw.githubusercontent.com/itayinbarr/brainproject/2929e94f521a8ddceab26bc100a98dc06b0da060/brain-atlas/models/brain.glb';
 const MANIFEST_URL='https://raw.githubusercontent.com/itayinbarr/brainproject/2929e94f521a8ddceab26bc100a98dc06b0da060/brain-atlas/models/manifest.json';
@@ -120,6 +121,7 @@ function registerModel(gltf){
  renderNeurochemistryExplorer();
  renderNeurophysiologyExplorer();
  renderSimulationExplorer();
+ renderClinicalPharmacology();
 }
 
 function applyVisibility(mesh){const catOn=layerEnabled.get(mesh.userData.atlasCategory)!==false;const side=mesh.userData.atlasSide;const sideOn=activeHemisphere==='both'||side==='median'||side===activeHemisphere;mesh.visible=catOn&&sideOn;}
@@ -459,6 +461,24 @@ function renderSimulationExplorer(){
   detail.querySelector('#simulation-result').textContent=result;
  }
  draw();
+}
+
+
+function renderClinicalPharmacology(){
+ const host=document.querySelector('#clinical-pharmacology-list'),detail=document.querySelector('#clinical-pharmacology-detail');if(!host||!detail)return;
+ host.innerHTML='';
+ clinicalPharmacology.forEach((item,index)=>{
+  const b=document.createElement('button');b.type='button';b.className='network-choice'+(index===0?' active':'');
+  b.innerHTML='<strong>'+escapeHtml(item.name)+'</strong><small>'+escapeHtml(item.class)+'</small>';
+  b.addEventListener('click',()=>show(item,b));host.appendChild(b);
+ });
+ function show(item,button){
+  host.querySelectorAll('button').forEach(b=>b.classList.toggle('active',b===button));
+  const refs=item.refs.map(([label,url])=>'<li><a href="'+escapeHtml(url)+'" target="_blank" rel="noopener noreferrer">'+escapeHtml(label)+' ↗</a></li>').join('');
+  const sections=[['Blancos moleculares',item.targets],['Mecanismo de acción',item.mechanism],['Usos clínicos generales',item.uses],['Circuitos y neuroanatomía',item.neuro],['Efectos adversos y riesgos',item.risks],['Precauciones y límites',item.caveat]];
+  detail.innerHTML='<p class="network-tag">'+escapeHtml(item.class)+'</p><h4>'+escapeHtml(item.name)+'</h4>'+sections.map(([heading,value])=>'<section class="network-section"><h5>'+heading+'</h5><p class="muted">'+escapeHtml(value)+'</p></section>').join('')+'<section class="network-section"><h5>Guías y bibliografía</h5><ul class="fact-references">'+refs+'</ul></section><p class="sim-caveat">Ficha educativa, no prescriptiva. No contiene dosis ni recomendaciones individualizadas. La elección, combinación, monitorización y retirada de medicamentos requieren evaluación profesional y consulta de guías vigentes.</p>';
+ }
+ show(clinicalPharmacology[0],host.querySelector('button'));
 }
 
 function renderLayerControls(){
