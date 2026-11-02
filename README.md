@@ -17,6 +17,11 @@ La aplicación incorpora:
 - Separación entre metadatos del atlas y contenido científico curado; las estructuras sin ficha verificada no reciben descripciones funcionales inferidas.
 - Rotación, zoom, restablecimiento de cámara y navegación rápida.
 - Planos de recorte axial, coronal y sagital con deslizador.
+- Exploradores de redes funcionales y tractos de sustancia blanca con límites de interpretación.
+- Nueve modalidades de neuroimagen con principios, aplicaciones, usos clínicos y bibliografía.
+- Cinco escenarios clínicos que relacionan neuroimagen, anatomía, redes y perfiles cognitivos.
+- Laboratorio de correlación anatomoclínica: ocho estructuras con funciones, manifestaciones, ejemplos de pruebas neuropsicológicas, neuroimagen pertinente, límites y fuentes.
+- Navegación desde escenarios clínicos y fichas de correlación hacia las estructuras disponibles en el atlas 3D.
 - Interfaz adaptable a escritorio, tablet y móvil.
 
 ## Modelo anatómico y atribución
