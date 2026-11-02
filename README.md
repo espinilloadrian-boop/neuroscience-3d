@@ -1,22 +1,39 @@
 # Neuroscience 3D
 
-Atlas cerebral 3D interactivo orientado a formación, neuropsicología e investigación.
+Atlas cerebral 3D interactivo para formación, neuropsicología e investigación.
 
-## Estado del proyecto
+## Estado
 
-**Prototipo Fase 1 — explorador anatómico interactivo.**
+**Prototipo Fase 1 — visor anatómico con modelo 3D real de origen abierto.**
 
-La aplicación incluye:
-- Escena 3D con rotación, zoom y selección directa de regiones.
-- Navegación rápida desde una lista de estructuras.
-- Fichas introductorias de lóbulos frontal, parietal, temporal y occipital, cerebelo y tronco encefálico.
-- Planos de sección axial, coronal y sagital con control deslizante de posición.
-- Diseño adaptable a escritorio, tablet y móvil.
-- Despliegue automatizado preparado para GitHub Pages.
+La aplicación incorpora:
+- Modelo cerebral GLB de Z-Anatomy / BodyParts3D cargado en el navegador.
+- Estructuras individualizadas y selección directa sobre la malla.
+- Búsqueda por nombre anatómico, región y categoría.
+- Identificación de lateralidad y sistema anatómico a partir de metadatos del modelo.
+- Rotación, zoom, restablecimiento de cámara y navegación rápida.
+- Planos de recorte axial, coronal y sagital con deslizador.
+- Interfaz adaptable a escritorio, tablet y móvil.
 
-### Advertencia sobre las secciones
+## Modelo anatómico y atribución
 
-Los cortes actuales utilizan planos de recorte geométricos sobre una malla esquemática. Las superficies quedan abiertas: no son cortes anatómicos segmentados ni reconstrucciones volumétricas. No representan coordenadas MNI, límites citoarquitectónicos o anatomía clínica de precisión.
+El modelo 3D se carga desde el repositorio público de [Brain Project](https://github.com/itayinbarr/brainproject), que integra activos de **Z-Anatomy / BodyParts3D / DBCLS** y estructuras adicionales registradas desde atlas de neuroimagen abiertos.
+
+- Repositorio de origen: https://github.com/itayinbarr/brainproject
+- Modelo utilizado: `brain-atlas/models/brain.glb`
+- Manifiesto anatómico: `brain-atlas/models/manifest.json`
+- Licencia de activos 3D y metadatos: **CC BY-SA 4.0**, según la documentación del proyecto de origen.
+- Código del visor de origen: Apache License 2.0.
+
+Este proyecto no redistribuye el archivo GLB: lo carga desde la URL pública del repositorio de origen. Se conserva la atribución y se debe mantener la referencia a la licencia del activo. Si en el futuro se incorpora una copia local o se modifica el modelo, habrá que incluir las atribuciones y cumplir la condición ShareAlike CC BY-SA 4.0.
+
+## Resolución y límites anatómicos
+
+El modelo ofrece anatomía macroscópica segmentada con estructuras identificadas. Los núcleos profundos, zonas hipotalámicas y tractos de sustancia blanca incorporados por registro de atlas de imagen en espacio MNI son aproximados (alrededor de 7 mm, según el proyecto de origen). No son representaciones de resolución histológica ni deben utilizarse para diagnóstico, planificación quirúrgica o mediciones clínicas.
+
+Los cortes axial, coronal y sagital de esta versión son planos geométricos de recorte de la malla 3D. No equivalen a imágenes de RM, segmentaciones volumétricas nativas ni reconstrucciones histológicas.
+
+La ficha funcional y clínica de cada estructura todavía está en desarrollo. No se infieren funciones, conectividad o relaciones causales únicamente a partir de su geometría.
 
 ## Ejecutar localmente
 
@@ -25,33 +42,31 @@ npm install
 npm run dev
 ``
 
-Para generar la versión de producción:
+Compilar y previsualizar:
 
 ```bash
 npm run build
 npm run preview
 ``
 
+Se requiere conexión a internet para cargar el modelo anatómico externo y el decodificador Draco.
+
 ## Hoja de ruta
 
-1. **Base anatómica:** sustituir las masas esquemáticas por mallas anatómicas de procedencia y licencia verificadas.
-2. **Atlas y orientación:** incorporar nomenclatura anatómica consistente, hemisferios, surcos, giros, estructuras profundas y referencias espaciales.
-3. **Conectividad:** tractos, fascículos, redes y relaciones estructurales/funcionales.
-4. **Microanatomía:** corteza por capas, tipos celulares, neuronas, glía, sinapsis y mielina.
-5. **Neurofisiología:** potencial de acción, neurotransmisores, receptores y plasticidad.
-6. **Neuroimagen y clínica:** RM, DTI, fMRI, PET, EEG y módulos de epilepsia, demencias, ACV, TEC y neurodesarrollo.
-7. **Evaluación e investigación:** fichas de instrumentos, variables, análisis estadísticos y módulo de investigación.
+1. **Atlas anatómico:** completar nombres, jerarquía TA2, lateralidad, límites, referencias y fichas anatómicas.
+2. **Conectividad:** fascículos, vías de asociación/proyección/comisurales y redes funcionales, diferenciando atlas y evidencia.
+3. **Microanatomía:** capas corticales, tipos celulares, glía, neuronas, mielina y sinapsis.
+4. **Neurofisiología:** potencial de acción, neurotransmisores, receptores y plasticidad.
+5. **Neuroimagen:** RM estructural, DWI/ADC, DTI, fMRI, PET, perfusión y EEG, con límites de inferencia.
+6. **Neurociencia clínica:** epilepsia, Alzheimer y otras demencias, ACV, TEC y neurodesarrollo.
+7. **Evaluación e investigación:** fichas de instrumentos, variables, análisis estadísticos y módulo de investigación sobre fluencia verbal semántica.
 
 ## Criterio científico
 
-Cada ficha debe diferenciar evidencia consolidada, evidencia emergente e hipótesis. Se documentarán fuentes primarias, DOI/PMID, población, metodología, limitaciones y fecha de revisión. Las asociaciones anatómico-funcionales no se presentarán como causalidad automática.
+Cada ficha debe diferenciar evidencia consolidada, emergente, hipótesis y controversias. Se documentarán fuentes primarias, DOI/PMID, población, metodología, limitaciones y fecha de revisión. No se presentarán asociaciones anatómico-funcionales como causalidad automática.
 
-El atlas es una herramienta educativa y de investigación. No constituye un instrumento diagnóstico ni reemplaza evaluación clínica.
-
-## Licencias y atribución
-
-No se incorporarán modelos anatómicos externos hasta verificar la licencia de cada activo, sus metadatos y los requisitos de atribución. Las modificaciones deberán respetar las condiciones originales de distribución.
+Neuroscience 3D es una herramienta educativa y de investigación; no constituye un instrumento diagnóstico.
 
 ## Tecnologías
 
-Vite, JavaScript y Three.js.
+Vite, JavaScript, Three.js, GLTFLoader y DRACOLoader.
