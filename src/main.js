@@ -18,7 +18,7 @@ import { neurochemicalSystems } from './neurochemistry.js';
 import { physiologyTopics } from './neurophysiology.js';
 import { simulationModels } from './simulations.js';
 import { clinicalPharmacology } from './clinical-pharmacology.js';
-import { parseCSV, normalizeResearchRows, summarizeResearch, pearson, pairwiseAuc, researchFields } from './research-analysis.js';
+import { parseCSV, normalizeResearchRows, summarizeResearch, pearson, pairwiseAuc, standardizedMeanDifference, researchFields } from './research-analysis.js';
 
 const MODEL_URL='https://raw.githubusercontent.com/itayinbarr/brainproject/2929e94f521a8ddceab26bc100a98dc06b0da060/brain-atlas/models/brain.glb';
 const MANIFEST_URL='https://raw.githubusercontent.com/itayinbarr/brainproject/2929e94f521a8ddceab26bc100a98dc06b0da060/brain-atlas/models/manifest.json';
@@ -359,7 +359,7 @@ function renderResearchDataTool(){
     let aucHtml='';
     if(groups.length===2&&metrics.length){
      const [a,b]=groups;
-     aucHtml='<h5>Discriminación exploratoria (AUC)</h5><p class="muted">Grupo de referencia: '+escapeHtml(a)+'; grupo positivo: '+escapeHtml(b)+'. AUC por rangos, sin intervalos de confianza ni validación externa. Valores cercanos a 0,5 indican discriminación limitada; la orientación depende del orden de los grupos.</p><div class="research-table-wrap"><table><thead><tr><th>Variable</th><th>AUC</th><th>n '+escapeHtml(a)+'</th><th>n '+escapeHtml(b)+'</th></tr></thead><tbody>'+metrics.map(([key,label])=>{const x=pairwiseAuc(rows,key,a,b);return '<tr><td>'+escapeHtml(label)+'</td><td>'+(x.auc===null?'—':x.auc.toFixed(3))+'</td><td>'+x.nA+'</td><td>'+x.nB+'</td></tr>';}).join('')+'</tbody></table></div>';
+     aucHtml='<h5>Discriminación exploratoria (AUC)</h5><p class="muted">Grupo de referencia: '+escapeHtml(a)+'; grupo positivo: '+escapeHtml(b)+'. AUC por rangos, sin intervalos de confianza ni validación externa. Valores cercanos a 0,5 indican discriminación limitada; la orientación depende del orden de los grupos.</p><div class="research-table-wrap"><table><thead><tr><th>Variable</th><th>AUC</th><th>Hedges g</th><th>IC 95% aprox.</th><th>n '+escapeHtml(a)+'</th><th>n '+escapeHtml(b)+'</th></tr></thead><tbody>'+metrics.map(([key,label])=>{const x=pairwiseAuc(rows,key,a,b),effect=standardizedMeanDifference(rows,key,a,b);return '<tr><td>'+escapeHtml(label)+'</td><td>'+(x.auc===null?'—':x.auc.toFixed(3))+'</td><td>'+(effect.g===null?'—':effect.g.toFixed(2))+'</td><td>'+(effect.ci?effect.ci[0].toFixed(2)+' a '+effect.ci[1].toFixed(2):'—')+'</td><td>'+x.nA+'</td><td>'+x.nB+'</td></tr>';}).join('')+'</tbody></table></div>';
     }else if(groups.length>2){aucHtml='<p class="muted">Hay más de dos grupos: el cálculo ROC/AUC se reserva para comparaciones binarias preespecificadas. No se seleccionan automáticamente pares favorables.</p>';}
     const corrPairs=[['total_words','age','Producción total × edad'],['total_words','education','Producción total × educación'],['mean_log_frequency','education','Frecuencia léxica × educación'],['mean_semantic_similarity','education','Similitud semántica × educación'],['first_latency','total_words','Latencia inicial × producción']];
     const corrResults=corrPairs.filter(([a,b])=>normalized.mapping[a]&&normalized.mapping[b]).map(([a,b,label])=>{const x=pearson(rows.map(r=>r[a]),rows.map(r=>r[b]));return '<tr><td>'+label+'</td><td>'+(x.r===null?'—':x.r.toFixed(3))+'</td><td>'+x.n+'</td></tr>';}).join('');
