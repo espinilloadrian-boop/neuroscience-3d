@@ -90,3 +90,26 @@ html{scroll-behavior:smooth;scroll-padding-top:76px}
  #scene-wrap{min-height:390px}
  .back-to-brain{right:12px;bottom:12px;padding:10px 12px}
 }
+
+/* Gestor local de múltiples proyectos de investigación */
+.research-project-manager{margin:14px 0;padding:14px;border:1px solid #30445e;border-radius:9px;background:#0e1928}
+.research-project-heading{display:flex;justify-content:space-between;align-items:flex-start;gap:10px}
+.research-project-heading h4{font-size:13px;color:#e4edf8;margin:0 0 6px}
+.research-project-heading .muted{font-size:10px;line-height:1.6}
+.research-project-count{flex:0 0 auto;font:8px 'DM Mono',monospace;letter-spacing:.7px;color:#8fc8ee;border:1px solid #35516e;border-radius:4px;padding:5px 7px}
+.research-project-list{display:grid;gap:7px;margin:12px 0}
+.research-project-card{width:100%;text-align:left;padding:10px;border:1px solid #293e58;border-radius:6px;background:#111e30;cursor:pointer}
+.research-project-card.active{border-color:#79a7d8;background:#182b42}
+.research-project-card-top{display:flex;justify-content:space-between;align-items:flex-start;gap:8px}
+.research-project-card strong{font-size:10px;color:#dce8f7;line-height:1.5}
+.research-project-card small{flex:0 0 auto;font:8px 'DM Mono',monospace;color:#8fc8b2}
+.research-project-area{display:block;margin-top:5px;font-size:9px;color:#8b9eb7}
+.research-project-footnote{font-size:9px;line-height:1.6;color:#8297b2;padding:9px;background:#0b1522;border-radius:5px}
+.research-project-form{display:grid;gap:9px;margin-top:14px;padding-top:13px;border-top:1px solid #293b52}
+.research-project-form h5{margin:0;color:#c7d9ee;font-size:10px}
+.research-project-form label{display:grid;gap:5px;font-size:9px;color:#9fb2ca}
+.research-project-form input,.research-project-form textarea{width:100%;padding:9px;border:1px solid #344760;border-radius:5px;background:#0b1522;color:#e5edf8;font:10px Manrope,sans-serif;resize:vertical}
+.research-project-form input:focus,.research-project-form textarea:focus{outline:1px solid #79a5d9;border-color:#79a5d9}
+.research-project-submit{justify-self:start;padding:9px 12px;border:1px solid #496987;border-radius:5px;background:#172b42;color:#dcecff;font-size:10px;cursor:pointer}
+.research-project-submit:hover{background:#203b59}
+#research-project-status{font-size:9px;margin-top:8px}
