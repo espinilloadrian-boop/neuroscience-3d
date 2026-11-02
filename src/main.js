@@ -14,6 +14,7 @@ import { neuropsychTests } from './neuropsych-tests.js';
 import { researchLab } from './research-lab.js';
 import { microTopics } from './microanatomy.js';
 import { cognitiveDomains } from './cognitive-domains.js';
+import { neurochemicalSystems } from './neurochemistry.js';
 
 const MODEL_URL='https://raw.githubusercontent.com/itayinbarr/brainproject/2929e94f521a8ddceab26bc100a98dc06b0da060/brain-atlas/models/brain.glb';
 const MANIFEST_URL='https://raw.githubusercontent.com/itayinbarr/brainproject/2929e94f521a8ddceab26bc100a98dc06b0da060/brain-atlas/models/manifest.json';
@@ -114,6 +115,7 @@ function registerModel(gltf){
  renderResearchLab();
  renderMicroExplorer();
  renderCognitiveDomainExplorer();
+ renderNeurochemistryExplorer();
 }
 
 function applyVisibility(mesh){const catOn=layerEnabled.get(mesh.userData.atlasCategory)!==false;const side=mesh.userData.atlasSide;const sideOn=activeHemisphere==='both'||side==='median'||side===activeHemisphere;mesh.visible=catOn&&sideOn;}
@@ -372,6 +374,25 @@ function renderCognitiveDomainExplorer(){
   }));
  }
  show(cognitiveDomains[0],host.querySelector('button'));
+}
+
+
+function renderNeurochemistryExplorer(){
+ const host=document.querySelector('#neurochemistry-list'),detail=document.querySelector('#neurochemistry-detail');
+ if(!host||!detail)return;
+ host.innerHTML='';
+ neurochemicalSystems.forEach((system,index)=>{
+  const b=document.createElement('button');b.type='button';b.className='network-choice'+(index===0?' active':'');
+  b.innerHTML='<strong>'+escapeHtml(system.name)+'</strong><small>'+escapeHtml(system.family)+'</small>';
+  b.addEventListener('click',()=>show(system,b));host.appendChild(b);
+ });
+ function show(system,button){
+  host.querySelectorAll('button').forEach(b=>b.classList.toggle('active',b===button));
+  const refs=system.refs.map(([label,url])=>'<li><a href="'+escapeHtml(url)+'" target="_blank" rel="noopener noreferrer">'+escapeHtml(label)+' ↗</a></li>').join('');
+  const sections=[['Síntesis y almacenamiento',system.synthesis],['Terminación de señal',system.termination],['Receptores',system.receptors],['Vías anatómicas',system.pathways],['Fisiología',system.physiology],['Correlatos clínicos',system.clinical],['Farmacología',system.pharmacology],['Límites y precauciones',system.caveat]];
+  detail.innerHTML='<p class="network-tag">'+escapeHtml(system.family)+'</p><h4>'+escapeHtml(system.name)+'</h4><p class="muted"><strong>Mensajero / principio:</strong> '+escapeHtml(system.transmitter)+'</p>'+sections.map(([heading,value])=>'<section class="network-section"><h5>'+heading+'</h5><p class="muted">'+escapeHtml(value)+'</p></section>').join('')+'<section class="network-section"><h5>Fuentes y lecturas</h5><ul class="fact-references">'+refs+'</ul></section><p class="correlation-note muted">Contenido educativo. No constituye indicación terapéutica ni permite inferir diagnóstico o tratamiento individual. Los efectos farmacológicos dependen de molécula, dosis, vía, comorbilidades e interacciones.</p>';
+ }
+ show(neurochemicalSystems[0],host.querySelector('button'));
 }
 
 function renderLayerControls(){
