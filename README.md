@@ -28,6 +28,7 @@ La aplicación incorpora:
 - Explorador de dominios cognitivos: memoria episódica y de trabajo, atención, funciones ejecutivas, lenguaje, habilidades visuoespaciales, cognición social, emoción, memoria semántica y praxias; enlaza fichas de evaluación y correlación anatómica.
 - Explorador de neuroquímica y farmacología: sistemas glutamatérgico, GABAérgico, dopaminérgico, serotoninérgico, noradrenérgico, colinérgico, opioide, endocannabinoide, histamina/orexina y principios de farmacodinamia.
 - Laboratorio de neurofisiología: gradientes y potencial de membrana, canales iónicos, potencial de acción, integración sináptica, liberación vesicular, plasticidad, oscilaciones, EEG, sueño y acoplamiento neurovascular.
+- Simuladores interactivos didácticos: excitabilidad neuronal simplificada, ocupación receptorial y plasticidad dependiente de señal de calcio. No son modelos biofísicos validados ni herramientas clínicas.
 - Navegación desde escenarios clínicos y fichas de correlación hacia las estructuras disponibles en el atlas 3D.
 - Interfaz adaptable a escritorio, tablet y móvil.
 
