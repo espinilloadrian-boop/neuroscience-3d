@@ -12,6 +12,7 @@ renderer.setPixelRatio(Math.min(devicePixelRatio, 2));
 renderer.outputColorSpace = THREE.SRGBColorSpace;
 renderer.toneMapping = THREE.ACESFilmicToneMapping;
 renderer.toneMappingExposure = 1.25;
+renderer.localClippingEnabled = true;
 sceneHost.appendChild(renderer.domElement);
 
 const controls = new OrbitControls(camera, renderer.domElement);
@@ -29,6 +30,7 @@ const rim = new THREE.DirectionalLight(0x6a9bdf, 2.4); rim.position.set(-5, 1, -
 const fill = new THREE.PointLight(0x8c78d6, 16, 18); fill.position.set(0, -3, 4); scene.add(fill);
 
 const brain = new THREE.Group(); scene.add(brain);
+const sectionPlane = new THREE.Plane(new THREE.Vector3(0, 1, 0), 0);
 const pickables = [];
 const palette = { frontal:0xd18d83, parietal:0xd9b77f, temporal:0x8e9fc5, occipital:0x8cb9ae, cerebellum:0xb58fc5, brainstem:0x9b9ba9 };
 const data = {
@@ -67,6 +69,10 @@ for(const side of [-1,1]){
 // Cerebelo y tronco, en posición inferior y posterior.
 makeRegion('cerebellum',[0,-1.22,-1.42],[.92,.62,.66],40);
 makeRegion('brainstem',[0,-.82,-.62],[.34,.88,.38],32);
+pickables.forEach(mesh => { mesh.material.clippingPlanes = [sectionPlane]; });
+
+const sectionGuide = new THREE.Mesh(new THREE.PlaneGeometry(5.5, 5.5), new THREE.MeshBasicMaterial({color:0x8bb9e8, transparent:true, opacity:.10, side:THREE.DoubleSide, depthWrite:false}));
+sectionGuide.visible = false; scene.add(sectionGuide);
 
 // Línea media sutil y referencia de orientación.
 const midline = new THREE.Mesh(new THREE.BoxGeometry(.018,1.35,2.25),new THREE.MeshBasicMaterial({color:0x90a9ca,transparent:true,opacity:.17}));
@@ -88,6 +94,30 @@ buttons.forEach(b=>b.addEventListener('click',()=>{controls.autoRotate=false;sel
 renderer.domElement.addEventListener('pointerdown',e=>{const rect=renderer.domElement.getBoundingClientRect();pointer.x=((e.clientX-rect.left)/rect.width)*2-1;pointer.y=-((e.clientY-rect.top)/rect.height)*2+1;raycaster.setFromCamera(pointer,camera);const hit=raycaster.intersectObjects(pickables)[0];if(hit){controls.autoRotate=false;selectRegion(hit.object.userData.region);}});
 document.querySelector('#reset-view').addEventListener('click',()=>{camera.position.set(0,1.1,10.8);controls.target.set(0,0,0);controls.autoRotate=true;controls.update();});
 document.querySelector('#toggle-labels').addEventListener('click',e=>{labelsOn=!labelsOn;e.currentTarget.classList.toggle('active',labelsOn);floorGrid.visible=labelsOn;midline.visible=labelsOn;});
+const sectionButtons=[...document.querySelectorAll('[data-plane]')];
+const sectionSlider=document.querySelector('#section-position');
+let activePlane='none';
+function setSection(type,value=Number(sectionSlider.value)){
+ activePlane=type;
+ const axes={axial:new THREE.Vector3(0,1,0),coronal:new THREE.Vector3(0,0,1),sagittal:new THREE.Vector3(1,0,0)};
+ const normal=axes[type];
+ sectionButtons.forEach(button=>button.classList.toggle('active',button.dataset.plane===type));
+ sectionSlider.disabled=!normal;
+ if(!normal){
+   pickables.forEach(mesh=>mesh.material.clippingPlanes=[]);
+   sectionGuide.visible=false;
+   return;
+ }
+ sectionPlane.normal.copy(normal);
+ sectionPlane.constant=-value;
+ pickables.forEach(mesh=>mesh.material.clippingPlanes=[sectionPlane]);
+ sectionGuide.visible=true;
+ sectionGuide.position.copy(normal).multiplyScalar(value);
+ sectionGuide.quaternion.setFromUnitVectors(new THREE.Vector3(0,0,1),normal);
+}
+sectionButtons.forEach(button=>button.addEventListener('click',()=>setSection(button.dataset.plane)));
+sectionSlider.addEventListener('input',()=>{if(activePlane!=='none')setSection(activePlane,Number(sectionSlider.value));});
+
 function resize(){const w=sceneHost.clientWidth,h=sceneHost.clientHeight;camera.aspect=w/h;camera.updateProjectionMatrix();renderer.setSize(w,h);}
 new ResizeObserver(resize).observe(sceneHost);resize();
 function animate(){requestAnimationFrame(animate);controls.update();renderer.render(scene,camera);}
