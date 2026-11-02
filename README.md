@@ -61,7 +61,7 @@ Se requiere conexión a internet para cargar el modelo anatómico externo y el d
 2. **Conectividad:** fascículos, vías de asociación/proyección/comisurales y redes funcionales, diferenciando atlas y evidencia.
 3. **Microanatomía:** capas corticales, tipos celulares, glía, neuronas, mielina y sinapsis.
 4. **Neurofisiología:** potencial de acción, neurotransmisores, receptores y plasticidad.
-5. **Neuroimagen:** RM estructural, DWI/ADC, DTI, fMRI, PET, perfusión y EEG, con límites de inferencia.
+5. **Neuroimagen:** módulo inicial implementado con nueve fichas de modalidades, principios de adquisición, aplicaciones clínicas y límites de inferencia.
 6. **Neurociencia clínica:** epilepsia, Alzheimer y otras demencias, ACV, TEC y neurodesarrollo.
 7. **Evaluación e investigación:** fichas de instrumentos, variables, análisis estadísticos y módulo de investigación sobre fluencia verbal semántica.
 
