@@ -38,7 +38,7 @@ floorGrid.position.y=-1.9;floorGrid.material.transparent=true;floorGrid.material
 
 const categoryNames={cortex:'Corteza cerebral',white_matter:'Sustancia blanca',deep_grey:'Núcleos grises profundos',diencephalon:'Diencéfalo',brainstem:'Tronco encefálico',cerebellum:'Cerebelo',ventricles:'Sistema ventricular',arteries:'Arterias',veins_sinuses:'Venas y senos venosos',cranial_nerves:'Nervios craneales',meninges_dura:'Meninges',tracts:'Tractos de sustancia blanca'};
 const categoryColors={cortex:0xb5a4d8,white_matter:0xd6c6a4,deep_grey:0x9a83bd,diencephalon:0x7ea9c9,brainstem:0x9e9cae,cerebellum:0xc28fbd,ventricles:0x65b7c4,arteries:0xd77878,veins_sinuses:0x779ad1,cranial_nerves:0xd6b36f,meninges_dura:0x9a9b9e,tracts:0x75b6a5};
-const meshes=[];const structures=new Map();let selectedId=null;let labelsOn=true;let activePlane='none';
+const meshes=[];const structures=new Map();const layerEnabled=new Map();let selectedId=null;let labelsOn=true;let activePlane='none';
 const info=document.querySelector('#structure-info');
 const loading=document.querySelector('#loading');
 const credit=document.querySelector('#model-credit');
@@ -89,10 +89,12 @@ function registerModel(gltf){
  credit.textContent='Z-ANATOMY / BODYPARTS3D · '+count+' ESTRUCTURAS NOMBRADAS';
  info.innerHTML='<div class="region-kicker">ATLAS ANATÓMICO · TA2</div><h2>Modelo anatómico cargado</h2><p class="muted">Se cargaron '+count+' estructuras identificables. Buscá por nombre o seleccioná directamente una región del modelo.</p><p class="muted" style="margin-top:12px">Las estructuras profundas y algunos tractos son aproximaciones registradas en espacio MNI (resolución aproximada de 7 mm); no tienen precisión clínica.</p>';
  renderSearch('');
+ renderLayerControls();
 }
 
 function selectStructure(s){
  if(!s)return;
+ if(layerEnabled.get(s.category)===false){layerEnabled.set(s.category,true);meshes.filter(m=>m.userData.atlasCategory===s.category).forEach(m=>m.visible=true);renderLayerControls();}
  selectedId=s.id;
  meshes.forEach(m=>{
   const active=String(m.userData.atlasId??(m.userData.atlasLabel+'|'+m.userData.atlasSide+'|'+m.userData.atlasCategory))===s.id;
@@ -118,6 +120,23 @@ function renderSearch(query){
   b.innerHTML='<span>'+escapeHtml(s.label)+'</span><small>'+escapeHtml(s.side==='left'?'IZQ':s.side==='right'?'DER':'MED')+'</small>';
   b.addEventListener('click',()=>{controls.autoRotate=false;selectStructure(s);});
   searchResults.appendChild(b);
+ });
+}
+function renderLayerControls(){
+ const host=document.querySelector('#layer-controls');if(!host)return;
+ const counts=new Map();structures.forEach(s=>counts.set(s.category,(counts.get(s.category)||0)+1));
+ host.innerHTML='';
+ [...counts.entries()].sort((a,b)=>(categoryNames[a[0]]||a[0]).localeCompare(categoryNames[b[0]]||b[0],'es')).forEach(([cat,count])=>{
+  if(!layerEnabled.has(cat))layerEnabled.set(cat,true);
+  const label=document.createElement('label');label.className='layer-toggle';
+  const input=document.createElement('input');input.type='checkbox';input.checked=layerEnabled.get(cat);input.setAttribute('aria-label','Mostrar '+(categoryNames[cat]||cat));
+  input.addEventListener('change',()=>{
+   layerEnabled.set(cat,input.checked);
+   meshes.filter(m=>m.userData.atlasCategory===cat).forEach(m=>{m.visible=input.checked;});
+  });
+  const name=document.createElement('span');name.textContent=categoryNames[cat]||cat;
+  const n=document.createElement('small');n.className='layer-count';n.textContent=count;
+  label.append(input,name,n);host.appendChild(label);
  });
 }
 function pickFromEvent(e){
