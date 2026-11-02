@@ -76,3 +76,15 @@ export function pairwiseAuc(rows,field,groupA,groupB){
  let wins=0,ties=0;for(const x of a)for(const y of b){if(x>y)wins++;else if(x===y)ties++;}
  return {nA:a.length,nB:b.length,auc:(wins+.5*ties)/(a.length*b.length)};
 }
+
+export function standardizedMeanDifference(rows,field,groupA,groupB){
+ const a=rows.filter(r=>r.group===groupA&&Number.isFinite(r[field])).map(r=>r[field]);
+ const b=rows.filter(r=>r.group===groupB&&Number.isFinite(r[field])).map(r=>r[field]);
+ const n1=a.length,n2=b.length;if(n1<2||n2<2)return {n1,n2,d:null,g:null,ci:null};
+ const mean=x=>x.reduce((s,v)=>s+v,0)/x.length;
+ const m1=mean(a),m2=mean(b),v1=a.reduce((s,x)=>s+(x-m1)**2,0)/(n1-1),v2=b.reduce((s,x)=>s+(x-m2)**2,0)/(n2-1);
+ const pooled=Math.sqrt(((n1-1)*v1+(n2-1)*v2)/(n1+n2-2));if(!pooled)return {n1,n2,d:null,g:null,ci:null};
+ const d=(m2-m1)/pooled,df=n1+n2-2,J=1-3/(4*df-1),g=J*d;
+ const se=Math.sqrt((n1+n2)/(n1*n2)+d*d/(2*df));
+ return {n1,n2,d,g,ci:[g-1.96*J*se,g+1.96*J*se]};
+}
