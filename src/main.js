@@ -3,6 +3,7 @@ import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
 import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
 import { DRACOLoader } from 'three/addons/loaders/DRACOLoader.js';
 import './style.css';
+import { findStructureFact } from './structure-facts.js';
 
 const MODEL_URL='https://raw.githubusercontent.com/itayinbarr/brainproject/2929e94f521a8ddceab26bc100a98dc06b0da060/brain-atlas/models/brain.glb';
 const MANIFEST_URL='https://raw.githubusercontent.com/itayinbarr/brainproject/2929e94f521a8ddceab26bc100a98dc06b0da060/brain-atlas/models/manifest.json';
@@ -109,7 +110,9 @@ function selectStructure(s){
  const side={left:'Izquierda',right:'Derecha',median:'Medial / no lateralizada'}[s.side]||s.side;
  const category=categoryNames[s.category]||s.category;
  const ta2Path=s.ta2.filter(x=>!['Bonus collection','Brain','Central nervous system','Head','Main divisions','Nervous system','Regions of human body','Scene Collection'].includes(x)).slice(-5).join(' › ');
- info.innerHTML='<div class="region-kicker">'+category.toUpperCase()+'</div><h2>'+escapeHtml(s.label)+'</h2><p class="muted">'+escapeHtml(s.region)+' · '+side+'</p><div class="panel-divider"></div><p class="eyebrow">JERARQUÍA ANATÓMICA TA2</p><p class="muted">'+escapeHtml(ta2Path||s.region)+'</p><div class="panel-divider"></div><p class="eyebrow">IDENTIFICACIÓN ANATÓMICA</p><p class="muted">Estructura individual del atlas, vinculada a su malla 3D y metadatos de origen. La descripción funcional detallada se incorporará en la siguiente etapa con referencias bibliográficas verificadas.</p><div class="anatomy-note"><strong>Procedencia</strong><p>'+escapeHtml(s.source)+'. La resolución y el grado de detalle dependen de la categoría anatómica; consultar las limitaciones del modelo.</p></div>';
+ const fact=findStructureFact(s.label);
+ const factHtml=fact ? '<div class="panel-divider"></div><p class="eyebrow">FICHA ANATÓMICA CURADA</p><h3>'+escapeHtml(fact.title)+'</h3>'+[['Ubicación',fact.location],['Límites y organización',fact.boundaries],['Brodmann',fact.brodmann],['Conectividad',fact.connections],['Funciones neurocognitivas',fact.functions],['Correlatos clínicos',fact.clinical],['Alcance de esta ficha',fact.limitation]].map(([title,value])=>'<section class="fact-section"><h4>'+title+'</h4><p class="muted">'+escapeHtml(value)+'</p></section>').join('')+'<section class="fact-section"><h4>Bibliografía y recursos</h4><ul class="fact-references">'+fact.references.map(ref=>'<li><a href="'+escapeHtml(ref.url)+'" target="_blank" rel="noopener noreferrer">'+escapeHtml(ref.label)+' ↗</a></li>').join('')+'</ul></section>' : '<div class="panel-divider"></div><p class="eyebrow">IDENTIFICACIÓN ANATÓMICA</p><p class="muted">Estructura individual del atlas, vinculada a su malla 3D y metadatos de origen. La ficha científica específica se incorporará cuando se haya verificado la correspondencia anatómica.</p>';
+ info.innerHTML='<div class="region-kicker">'+category.toUpperCase()+'</div><h2>'+escapeHtml(s.label)+'</h2><p class="muted">'+escapeHtml(s.region)+' · '+side+'</p><div class="panel-divider"></div><p class="eyebrow">JERARQUÍA ANATÓMICA TA2</p><p class="muted">'+escapeHtml(ta2Path||s.region)+'</p>'+factHtml+'<div class="anatomy-note"><strong>Procedencia del modelo</strong><p>'+escapeHtml(s.source)+'. La resolución y el grado de detalle dependen de la categoría anatómica; consultar las limitaciones del modelo.</p></div>';
  buttons.forEach(b=>b.classList.toggle('selected',normalise(b.dataset.region)===normalise(s.category)||normalise(b.dataset.region)===normalise(s.region)));
 }
 function escapeHtml(s){return String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));}
