@@ -39,3 +39,6 @@
 
 
 .assessment-explorer{margin-top:2px}.assessment-explorer>.muted{font-size:10px;line-height:1.65;margin:-4px 0 10px}.assessment-explorer .network-detail{max-height:820px;overflow:auto}.assessment-explorer .network-detail .muted{font-size:10px;line-height:1.7}.assessment-explorer .network-choice small{line-height:1.45}.assessment-search{width:100%;margin:0 0 9px;padding:9px 10px;background:#101c2c;border:1px solid #33445e;border-radius:6px;color:#e0eaf8;font:10px Manrope,sans-serif;outline:none}.assessment-search:focus{border-color:#789dc9}.assessment-search::placeholder{color:#72849e}
+
+
+.research-explorer{margin-top:2px}.research-explorer>.muted{font-size:10px;line-height:1.65;margin:-4px 0 10px}.research-explorer .network-detail{max-height:920px;overflow:auto}.research-explorer .network-detail .muted{font-size:10px;line-height:1.7}.research-list{margin:6px 0 0;padding-left:17px;display:grid;gap:7px}.research-list li{font-size:10px;line-height:1.65;color:#b7c5d8}.research-item{padding:9px 10px;margin:6px 0;border:1px solid #293d56;border-radius:6px;background:#101c2b}.research-item strong{display:block;font-size:10px;color:#d7e4f5}.research-item small{display:block;font:8px 'DM Mono',monospace;color:#8ca4c2;margin:3px 0 5px}.research-item .muted{font-size:10px}
