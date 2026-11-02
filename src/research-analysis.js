@@ -135,3 +135,32 @@ export function kruskalWallis(rows,field){
  const df=k-1,p=gammaQ(df/2,H/2),epsilonSquared=Math.max(0,(H-k+1)/(N-k));
  return {k,N,H,p,df,epsilonSquared,groups:groups.map(g=>({group:g.group,n:g.values.length}))};
 }
+
+
+function normalCdf(x){
+ const z=Math.abs(x)/Math.sqrt(2),t=1/(1+.3275911*z);
+ const erf=1-(((((1.061405429*t-1.453152027)*t)+1.421413741)*t-.284496736)*t+.254829592)*t*Math.exp(-z*z);
+ return .5*(1+(x<0?-erf:erf));
+}
+export function dunnPostHoc(rows,field){
+ const groups=[...new Set(rows.map(r=>r.group))].sort((x,y)=>x.localeCompare(y,"es"))
+  .map(group=>({group,values:rows.filter(r=>r.group===group&&Number.isFinite(r[field])).map(r=>r[field])}))
+  .filter(g=>g.values.length);
+ const all=groups.flatMap(g=>g.values),N=all.length,k=groups.length;
+ if(k<3||N<=k)return [];
+ const ranks=ranked(all),rankMeans=[];let offset=0;
+ for(const g of groups){const sum=ranks.slice(offset,offset+g.values.length).reduce((s,v)=>s+v,0);rankMeans.push({group:g.group,n:g.values.length,mean:sum/g.values.length});offset+=g.values.length;}
+ const ties=new Map();all.forEach(v=>ties.set(v,(ties.get(v)||0)+1));
+ const tieTerm=[...ties.values()].reduce((s,t)=>s+(t**3-t),0)/(12*(N-1));
+ const base=N*(N+1)/12-tieTerm;
+ if(!(base>0))return [];
+ const pairs=[];
+ for(let i=0;i<rankMeans.length;i++)for(let j=i+1;j<rankMeans.length;j++){
+  const x=rankMeans[i],y=rankMeans[j],se=Math.sqrt(base*(1/x.n+1/y.n));
+  const z=(y.mean-x.mean)/se,p=Math.min(1,2*(1-normalCdf(Math.abs(z))));
+  pairs.push({groupA:x.group,groupB:y.group,nA:x.n,nB:y.n,meanRankA:x.mean,meanRankB:y.mean,z,p});
+ }
+ const ordered=[...pairs].sort((x,y)=>x.p-y.p);let running=0,m=ordered.length;
+ ordered.forEach((item,index)=>{running=Math.max(running,Math.min(1,(m-index)*item.p));item.pHolm=running;});
+ return pairs;
+}
