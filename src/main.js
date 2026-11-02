@@ -10,6 +10,7 @@ import { modalities } from './neuroimaging.js';
 import { clinicalCases } from './clinical-cases.js';
 import { clinicalCaseLinks } from './clinical-case-links.js';
 import { correlations } from './clinical-correlation.js';
+import { neuropsychTests } from './neuropsych-tests.js';
 
 const MODEL_URL='https://raw.githubusercontent.com/itayinbarr/brainproject/2929e94f521a8ddceab26bc100a98dc06b0da060/brain-atlas/models/brain.glb';
 const MANIFEST_URL='https://raw.githubusercontent.com/itayinbarr/brainproject/2929e94f521a8ddceab26bc100a98dc06b0da060/brain-atlas/models/manifest.json';
@@ -106,6 +107,7 @@ function registerModel(gltf){
  renderNeuroimagingExplorer();
  renderClinicalCaseExplorer();
  renderCorrelationExplorer();
+ renderAssessmentExplorer();
 }
 
 function applyVisibility(mesh){const catOn=layerEnabled.get(mesh.userData.atlasCategory)!==false;const side=mesh.userData.atlasSide;const sideOn=activeHemisphere==='both'||side==='median'||side===activeHemisphere;mesh.visible=catOn&&sideOn;}
@@ -276,6 +278,31 @@ function renderCorrelationExplorer(){
   });
  }
  show(correlations[0],host.querySelector('button'));
+}
+
+
+function renderAssessmentExplorer(){
+ const host=document.querySelector('#assessment-list'),detail=document.querySelector('#assessment-detail'),search=document.querySelector('#assessment-search');
+ if(!host||!detail)return;
+ function renderList(query=''){
+  const q=normalise(query);
+  const filtered=neuropsychTests.filter(test=>normalise(test.name+' '+test.domain+' '+test.construct+' '+test.use).includes(q));
+  host.innerHTML='';
+  filtered.forEach((test,index)=>{
+   const b=document.createElement('button');b.type='button';b.className='network-choice'+(index===0?' active':'');
+   b.innerHTML='<strong>'+escapeHtml(test.name)+'</strong><small>'+escapeHtml(test.domain)+'</small>';
+   b.addEventListener('click',()=>show(test,b));host.appendChild(b);
+  });
+  if(!filtered.length){detail.innerHTML='<p class="muted">No se encontraron instrumentos para esa búsqueda.</p>';return;}
+  show(filtered[0],host.querySelector('button'));
+ }
+ function show(test,button){
+  host.querySelectorAll('button').forEach(b=>b.classList.toggle('active',b===button));
+  const refs=test.refs.map(([label,url])=>'<li><a href="'+escapeHtml(url)+'" target="_blank" rel="noopener noreferrer">'+escapeHtml(label)+' ↗</a></li>').join('');
+  detail.innerHTML='<p class="network-tag">'+escapeHtml(test.domain)+'</p><h4>'+escapeHtml(test.name)+'</h4>'+[['Constructos evaluados',test.construct],['Uso clínico',test.use],['Interpretación',test.interpretation],['Normas y adaptación',test.norms],['Tiempo orientativo',test.time],['Derechos y materiales',test.license]].map(([heading,value])=>'<section class="network-section"><h5>'+heading+'</h5><p class="muted">'+escapeHtml(value)+'</p></section>').join('')+'<section class="network-section"><h5>Fuentes y recursos</h5><ul class="fact-references">'+refs+'</ul></section>';
+ }
+ renderList('');
+ search?.addEventListener('input',()=>renderList(search.value));
 }
 
 function renderLayerControls(){
