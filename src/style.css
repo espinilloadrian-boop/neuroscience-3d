@@ -25,3 +25,11 @@
 .neuroimaging-explorer{margin-top:2px}.neuroimaging-explorer>.muted{font-size:10px;line-height:1.6;margin:-4px 0 10px}.neuroimaging-explorer .network-detail{max-height:720px;overflow:auto}.neuroimaging-explorer .network-section{margin-top:13px}.neuroimaging-explorer .network-detail .muted{font-size:10px;line-height:1.7}.neuroimaging-explorer .network-choice small{line-height:1.45}
 
 .clinical-case-explorer{margin-top:2px}.clinical-case-explorer>.muted{font-size:10px;line-height:1.6;margin:-4px 0 10px}.clinical-case-explorer .network-detail{max-height:820px;overflow:auto}.clinical-case-explorer .network-section{margin-top:13px}.clinical-case-explorer .network-detail .muted{font-size:10px;line-height:1.7}.clinical-case-explorer .network-choice small{line-height:1.45}
+
+
+.clinical-targets{display:flex;flex-wrap:wrap;gap:6px;margin-top:9px}
+.clinical-target,.clinical-related-button{border:1px solid #405a78;background:#17283d;color:#c6d9f1;border-radius:5px;padding:7px 9px;font:10px Manrope,sans-serif;cursor:pointer}
+.clinical-target:hover,.clinical-related-button:hover{border-color:#8bb1df;background:#203751;color:#fff}
+.clinical-focus-status{font-size:9px!important;line-height:1.55;margin:9px 0 0}
+.clinical-related-links{display:flex;flex-wrap:wrap;gap:6px;margin-top:9px}
+.clinical-related-button{font-size:9px;padding:6px 8px}
