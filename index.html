@@ -81,6 +81,19 @@
             <p class="eyebrow">INVESTIGACIÓN · MÉTODOS Y REPRODUCIBILIDAD</p>
             <h3 class="network-heading">Laboratorio de investigación</h3>
             <p class="muted">Diseño, variables, pipeline y análisis para el estudio de fluencia verbal semántica. Marco metodológico; no contiene datos ni resultados de participantes.</p>
+            <div class="research-project-manager" id="research-project-manager">
+              <div class="research-project-heading"><div><h4>Gestor de investigaciones</h4><p class="muted">Cada proyecto tiene su propia ficha. Podés incorporar nuevos estudios sin alterar los anteriores.</p></div><span class="research-project-count">MULTIPROYECTO</span></div>
+              <div id="research-project-list" class="research-project-list" aria-label="Proyectos de investigación"></div>
+              <div id="research-project-detail" class="network-detail" aria-live="polite"></div>
+              <form id="research-project-form" class="research-project-form">
+                <h5>Crear una investigación</h5>
+                <label>Título del proyecto<input name="title" maxlength="120" required placeholder="Ej.: Memoria episódica en DCL"></label>
+                <label>Área científica<input name="area" maxlength="100" placeholder="Ej.: Neuropsicología · Envejecimiento"></label>
+                <label>Pregunta u objetivo inicial<textarea name="question" maxlength="500" rows="2" placeholder="¿Qué querés investigar? (opcional)"></textarea></label>
+                <button type="submit" class="research-project-submit">＋ Crear proyecto</button>
+              </form>
+              <p id="research-project-status" class="muted" aria-live="polite"></p>
+            </div>
             <div class="research-data-tool">
               <h4>Analizador de datos de fluencia semántica</h4>
               <p class="muted">Importá un CSV anonimizado. El procesamiento se realiza localmente en tu navegador; el archivo no se transmite a un servidor.</p>
