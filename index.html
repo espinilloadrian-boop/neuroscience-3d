@@ -1,0 +1,42 @@
+<!doctype html>
+<html lang="es">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="theme-color" content="#080d18" />
+    <meta name="description" content="Neuroscience 3D — atlas cerebral interactivo para formación e investigación." />
+    <title>Neuroscience 3D | Atlas cerebral</title>
+  </head>
+  <body>
+    <div id="app">
+      <header class="topbar">
+        <a class="brand" href="#" aria-label="Neuroscience 3D inicio"><span class="brand-mark">N³</span><span><strong>NEUROSCIENCE</strong><small>3D · ATLAS INTERACTIVO</small></span></a>
+        <div class="top-meta"><span class="live-dot"></span> PROTOTIPO · FASE 1 <span class="version">v0.1</span></div>
+      </header>
+      <main class="workspace">
+        <section class="viewer-panel">
+          <div class="viewer-heading"><div><p class="eyebrow">EXPLORADOR ANATÓMICO</p><h1>Encéfalo humano</h1></div><span class="orientation">VISTA 3D · INTERACTIVA</span></div>
+          <div id="scene-wrap"><div id="scene"></div><div class="scene-hint">Arrastrá para rotar <i>·</i> Rueda para zoom <i>·</i> Clic para seleccionar</div><div class="axis-label axis-a">ANTERIOR</div><div class="axis-label axis-p">POSTERIOR</div><div class="loading" id="loading">Construyendo modelo 3D…</div></div>
+          <div class="viewer-toolbar"><button id="reset-view" class="tool-button">↺ <span>Restablecer vista</span></button><div class="view-state" id="view-state">Vista lateral izquierda</div><button id="toggle-labels" class="tool-button active">◎ <span>Referencias</span></button></div>
+        </section>
+        <aside class="info-panel">
+          <div class="panel-top"><span class="eyebrow">ESTRUCTURA SELECCIONADA</span><span class="status-tag">MODO EXPLORACIÓN</span></div>
+          <div id="structure-info" aria-live="polite"><div class="region-kicker">SISTEMA NERVIOSO CENTRAL</div><h2>Seleccioná una región</h2><p class="muted">Explorá el modelo y seleccioná una estructura para consultar su descripción anatómica y funcional.</p></div>
+          <div class="panel-divider"></div>
+          <p class="eyebrow">NAVEGACIÓN RÁPIDA</p>
+          <div class="region-list" id="region-list">
+            <button data-region="frontal">01 <span>Lóbulo frontal</span><b>→</b></button>
+            <button data-region="parietal">02 <span>Lóbulo parietal</span><b>→</b></button>
+            <button data-region="temporal">03 <span>Lóbulo temporal</span><b>→</b></button>
+            <button data-region="occipital">04 <span>Lóbulo occipital</span><b>→</b></button>
+            <button data-region="cerebellum">05 <span>Cerebelo</span><b>→</b></button>
+            <button data-region="brainstem">06 <span>Tronco encefálico</span><b>→</b></button>
+          </div>
+          <div class="disclaimer"><strong>Nota anatómica</strong><p>La geometría de esta versión es esquemática y tiene fines didácticos. No reproduce con precisión giros, surcos, límites citoarquitectónicos ni coordenadas estereotáxicas. No utilizar con fines diagnósticos.</p></div>
+        </aside>
+      </main>
+      <footer><span>NEUROSCIENCE 3D</span><span>ANATOMÍA · CONECTIVIDAD · FUNCIÓN · CLÍNICA</span><span>DESARROLLO EN CURSO</span></footer>
+    </div>
+    <script type="module" src="/src/main.js"></script>
+  </body>
+</html>
