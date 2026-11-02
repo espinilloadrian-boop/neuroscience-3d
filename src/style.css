@@ -64,3 +64,29 @@
 .research-data-tool{margin:14px 0;padding:13px;border:1px solid #2a405b;border-radius:9px;background:#101c2b}.research-data-tool h4{font-size:13px;color:#e4edf8;margin:0 0 8px}.research-data-tool>.muted{font-size:10px;line-height:1.65}.research-upload{display:inline-flex;align-items:center;gap:8px;margin:9px 0;padding:9px 12px;border:1px solid #496987;border-radius:6px;color:#d9e9fa;font-size:10px;cursor:pointer}.research-upload input{max-width:170px;font-size:9px;color:#9eb4cd}.research-template{display:grid;gap:6px;margin:10px 0;padding:10px;background:#0b1522;border-radius:6px}.research-template strong,.research-data-results h5{font-size:10px;color:#c7d9ee}.research-template code{font-size:9px;line-height:1.7;color:#8fd0f4;overflow-wrap:anywhere;white-space:normal}.research-template small{font-size:9px;color:#8398b2;line-height:1.6}.research-data-results{min-width:0}.research-result-block{margin-top:12px}.research-result-block h5{margin:14px 0 6px}.research-table-wrap{width:100%;overflow-x:auto;margin:8px 0 12px}.research-table-wrap table{width:100%;border-collapse:collapse;font-size:9px;white-space:nowrap}.research-table-wrap th,.research-table-wrap td{padding:7px 8px;border-bottom:1px solid #293b52;text-align:left;color:#b9cbe0}.research-table-wrap th{color:#8fc8ee;font-weight:600}.research-table-wrap td small{display:block;color:#7e94ae;font-size:8px;margin-top:2px}.research-result-block .muted{font-size:9px;line-height:1.6}
 
 .research-template-link{display:inline-block;margin:8px 0;color:#8fc8ee;font-size:10px;text-decoration:underline;text-underline-offset:3px}
+
+
+/* Navegación persistente y visor cerebral accesible durante el recorrido */
+html{scroll-behavior:smooth;scroll-padding-top:76px}
+.atlas-nav{position:sticky;top:0;z-index:30;display:flex;gap:7px;align-items:center;overflow-x:auto;white-space:nowrap;padding:9px max(4.2%,calc((100% - 1600px)/2));background:rgba(8,13,24,.94);border-top:1px solid #1b2a40;border-bottom:1px solid #26354c;backdrop-filter:blur(12px);scrollbar-width:thin}
+.atlas-nav a{flex:0 0 auto;padding:7px 10px;border:1px solid #2c405b;border-radius:5px;color:#aebfd5;text-decoration:none;font-size:10px;transition:background .2s,border-color .2s}
+.atlas-nav a:hover,.atlas-nav a:focus-visible{background:#17283d;border-color:#79a7d8;color:#eff6ff;outline:none}
+.workspace{align-items:start}
+.viewer-panel{position:sticky;top:66px;height:calc(100vh - 84px);min-height:560px;max-height:900px}
+#scene-wrap{min-height:0}
+.back-to-brain{display:none;position:fixed;right:16px;bottom:18px;z-index:40;padding:11px 14px;border:1px solid #6a8fb9;border-radius:24px;background:rgba(17,30,48,.96);box-shadow:0 8px 28px #0008;color:#e4efff;text-decoration:none;font-size:11px}
+.back-to-brain:hover{background:#203751}
+#brain-top,#network-anchor,#clinical-anchor,#assessment-anchor,#research-anchor,#neurophysiology-anchor{scroll-margin-top:76px}
+@media(max-width:900px){
+ .atlas-nav{padding:8px 3%}
+ .viewer-panel{position:relative;top:auto;height:auto;min-height:560px;max-height:none}
+ #scene-wrap{min-height:390px}
+ .back-to-brain{display:inline-flex;align-items:center;gap:6px}
+}
+@media(max-width:520px){
+ .atlas-nav{gap:5px;padding:7px 12px}
+ .atlas-nav a{font-size:9px;padding:7px 9px}
+ .viewer-panel{min-height:500px}
+ #scene-wrap{min-height:390px}
+ .back-to-brain{right:12px;bottom:12px;padding:10px 12px}
+}
