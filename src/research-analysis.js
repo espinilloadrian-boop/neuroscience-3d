@@ -31,21 +31,29 @@ export const researchFields=[
  ["total_words","Producción total"],["mean_log_frequency","Frecuencia léxica media"],["mean_semantic_similarity","Similitud semántica media"],["clustering","Clustering"],["switching","Switching"],["first_latency","Latencia inicial"],["age","Edad"],["education","Años de educación"]
 ];
 export function normalizeResearchRows(rows){
- if(!rows.length)return {rows:[],missing:["group"],mapping:{}};
+ if(!rows.length)return {rows:[],missing:["group"],mapping:{},invalidNumeric:{},duplicateIds:[]};
  const headers=Object.keys(rows[0]),lower=headers.map(h=>h.toLowerCase().trim());
  const mapping={};
  for(const [key,choices] of Object.entries(aliases)){const i=lower.findIndex(h=>choices.includes(h));if(i>=0)mapping[key]=headers[i];}
- const missing=["group"].filter(k=>!mapping[k]);
+ const missing=["group"].filter(k=>!mapping[k]),invalidNumeric={};
  const normalized=rows.map((r,i)=>{
   const out={_row:i+2};
   for(const [key,header] of Object.entries(mapping)){
-   const raw=r[header];
+   const raw=String(r[header]??"").trim();
    if(key==="group"||key==="participant_id")out[key]=raw;
-   else {const n=Number(String(raw).replace(",","."));out[key]=raw===""||!Number.isFinite(n)?null:n;}
+   else {
+    if(raw===""){out[key]=null;continue;}
+    const cleaned=raw.replace(",",".");const n=Number(cleaned);
+    if(!Number.isFinite(n)){out[key]=null;invalidNumeric[key]=(invalidNumeric[key]||0)+1;}
+    else out[key]=n;
+   }
   }
   return out;
  }).filter(r=>r.group);
- return {rows:normalized,missing,mapping};
+ const idCounts=new Map();
+ if(mapping.participant_id)normalized.forEach(r=>{if(r.participant_id)idCounts.set(r.participant_id,(idCounts.get(r.participant_id)||0)+1);});
+ const duplicateIds=[...idCounts].filter(([,n])=>n>1).map(([id])=>id);
+ return {rows:normalized,missing,mapping,invalidNumeric,duplicateIds};
 }
 export function summarizeResearch(rows){
  const groups=[...new Set(rows.map(r=>r.group))].sort((a,b)=>a.localeCompare(b,"es"));
