@@ -12,6 +12,7 @@ import { clinicalCaseLinks } from './clinical-case-links.js';
 import { correlations } from './clinical-correlation.js';
 import { neuropsychTests } from './neuropsych-tests.js';
 import { researchLab } from './research-lab.js';
+import { microTopics } from './microanatomy.js';
 
 const MODEL_URL='https://raw.githubusercontent.com/itayinbarr/brainproject/2929e94f521a8ddceab26bc100a98dc06b0da060/brain-atlas/models/brain.glb';
 const MANIFEST_URL='https://raw.githubusercontent.com/itayinbarr/brainproject/2929e94f521a8ddceab26bc100a98dc06b0da060/brain-atlas/models/manifest.json';
@@ -110,6 +111,7 @@ function registerModel(gltf){
  renderCorrelationExplorer();
  renderAssessmentExplorer();
  renderResearchLab();
+ renderMicroExplorer();
 }
 
 function applyVisibility(mesh){const catOn=layerEnabled.get(mesh.userData.atlasCategory)!==false;const side=mesh.userData.atlasSide;const sideOn=activeHemisphere==='both'||side==='median'||side===activeHemisphere;mesh.visible=catOn&&sideOn;}
@@ -318,6 +320,24 @@ function renderResearchLab(){
  const pipeline=researchLab.pipeline.map(v=>'<article class="research-item"><strong>'+escapeHtml(v.step)+'</strong><p class="muted">'+escapeHtml(v.detail)+'</p></article>').join('');
  const analysis=researchLab.analysis.map(v=>'<article class="research-item"><strong>'+escapeHtml(v.name)+'</strong><p class="muted">'+escapeHtml(v.detail)+'</p></article>').join('');
  detail.innerHTML='<p class="network-tag">PROTOCOLO · MARCO REPRODUCIBLE</p><h4>'+escapeHtml(researchLab.title)+'</h4><p class="muted">'+escapeHtml(researchLab.subtitle)+'</p><section class="network-section"><h5>Pregunta de investigación</h5><p class="muted">'+escapeHtml(researchLab.question)+'</p></section><section class="network-section"><h5>Diseño</h5><p class="muted">'+escapeHtml(researchLab.design)+'</p></section><section class="network-section"><h5>Grupos de comparación</h5>'+groups+'</section><section class="network-section"><h5>Objetivos</h5>'+objectives+'</section><section class="network-section"><h5>Variables y definiciones operacionales</h5>'+variables+'</section><section class="network-section"><h5>Pipeline de análisis</h5>'+pipeline+'</section><section class="network-section"><h5>Estrategia estadística</h5>'+analysis+'</section><section class="network-section"><h5>Precauciones metodológicas y éticas</h5>'+list(researchLab.safeguards)+'</section><section class="network-section"><h5>Referencias iniciales</h5><ul class="fact-references">'+refs+'</ul></section><p class="correlation-note muted">Antes del análisis confirmatorio: cerrar protocolo, definir variable primaria, cálculo muestral, criterios de exclusión, manejo de datos faltantes y plan de validación. No se han cargado resultados empíricos.</p>';
+}
+
+
+function renderMicroExplorer(){
+ const host=document.querySelector('#micro-list'),detail=document.querySelector('#micro-detail');
+ if(!host||!detail)return;
+ host.innerHTML='';
+ microTopics.forEach((topic,index)=>{
+  const b=document.createElement('button');b.type='button';b.className='network-choice'+(index===0?' active':'');
+  b.innerHTML='<strong>'+escapeHtml(topic.name)+'</strong><small>'+escapeHtml(topic.group)+'</small>';
+  b.addEventListener('click',()=>show(topic,b));host.appendChild(b);
+ });
+ function show(topic,button){
+  host.querySelectorAll('button').forEach(b=>b.classList.toggle('active',b===button));
+  const refs=topic.refs.map(([label,url])=>'<li><a href="'+escapeHtml(url)+'" target="_blank" rel="noopener noreferrer">'+escapeHtml(label)+' ↗</a></li>').join('');
+  detail.innerHTML='<p class="network-tag">'+escapeHtml(topic.group)+'</p><h4>'+escapeHtml(topic.name)+'</h4><p class="muted">'+escapeHtml(topic.summary)+'</p>'+[['Organización y mecanismo',topic.details],['Relevancia clínica',topic.clinical],['Límites de interpretación',topic.caveat]].map(([heading,value])=>'<section class="network-section"><h5>'+heading+'</h5><p class="muted">'+escapeHtml(value)+'</p></section>').join('')+'<section class="network-section"><h5>Fuentes y lecturas</h5><ul class="fact-references">'+refs+'</ul></section>';
+ }
+ show(microTopics[0],host.querySelector('button'));
 }
 
 function renderLayerControls(){
