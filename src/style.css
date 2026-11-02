@@ -36,3 +36,6 @@
 
 
 .correlation-explorer{margin-top:2px}.correlation-explorer>.muted{font-size:10px;line-height:1.65;margin:-4px 0 10px}.correlation-explorer .network-detail{max-height:820px;overflow:auto}.correlation-explorer .network-detail .muted{font-size:10px;line-height:1.7}.correlation-explorer .network-choice small{line-height:1.45}.correlation-note{font-size:9px!important;line-height:1.6!important;margin-top:12px}
+
+
+.assessment-explorer{margin-top:2px}.assessment-explorer>.muted{font-size:10px;line-height:1.65;margin:-4px 0 10px}.assessment-explorer .network-detail{max-height:820px;overflow:auto}.assessment-explorer .network-detail .muted{font-size:10px;line-height:1.7}.assessment-explorer .network-choice small{line-height:1.45}.assessment-search{width:100%;margin:0 0 9px;padding:9px 10px;background:#101c2c;border:1px solid #33445e;border-radius:6px;color:#e0eaf8;font:10px Manrope,sans-serif;outline:none}.assessment-search:focus{border-color:#789dc9}.assessment-search::placeholder{color:#72849e}
