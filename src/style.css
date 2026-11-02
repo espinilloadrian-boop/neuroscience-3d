@@ -33,3 +33,6 @@
 .clinical-focus-status{font-size:9px!important;line-height:1.55;margin:9px 0 0}
 .clinical-related-links{display:flex;flex-wrap:wrap;gap:6px;margin-top:9px}
 .clinical-related-button{font-size:9px;padding:6px 8px}
+
+
+.correlation-explorer{margin-top:2px}.correlation-explorer>.muted{font-size:10px;line-height:1.65;margin:-4px 0 10px}.correlation-explorer .network-detail{max-height:820px;overflow:auto}.correlation-explorer .network-detail .muted{font-size:10px;line-height:1.7}.correlation-explorer .network-choice small{line-height:1.45}.correlation-note{font-size:9px!important;line-height:1.6!important;margin-top:12px}
