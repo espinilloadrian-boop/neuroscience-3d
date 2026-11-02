@@ -13,7 +13,7 @@ La aplicación incorpora:
 - Filtros para mostrar u ocultar sistemas anatómicos completos.
 - Visualización del hemisferio izquierdo, derecho o ambos.
 - Identificación de lateralidad y sistema anatómico a partir de metadatos del modelo.
-- Fichas anatómicas curadas iniciales para hipocampo, tálamo, complejo amigdalino, cerebelo y corteza prefrontal: ubicación, organización, conectividad, funciones, correlatos clínicos, límites de interpretación y referencias externas.
+- Fichas anatómicas curadas iniciales para hipocampo, tálamo, complejo amigdalino, cerebelo, corteza prefrontal, ganglios basales, corteza motora primaria, corteza somatosensorial primaria y cuerpo calloso: ubicación, organización, conectividad, funciones, correlatos clínicos, límites de interpretación y referencias externas.
 - Separación entre metadatos del atlas y contenido científico curado; las estructuras sin ficha verificada no reciben descripciones funcionales inferidas.
 - Rotación, zoom, restablecimiento de cámara y navegación rápida.
 - Planos de recorte axial, coronal y sagital con deslizador.
