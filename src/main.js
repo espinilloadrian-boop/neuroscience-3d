@@ -66,7 +66,7 @@ function registerModel(gltf){
   const region=ex.bx_region||ex.region||'Sistema nervioso central';
   const color=new THREE.Color(categoryColors[cat]??0x9eacc1);
   const original=Array.isArray(o.material)?o.material[0]:o.material;
-  const mat=new THREE.MeshStandardMaterial({color,roughness:cat==='arteries'||cat==='veins_sinuses'?.48:.78,metalness:0,side:cat==='meninges_dura'?THREE.DoubleSide:THREE.FrontSide});
+  const mat=new THREE.MeshStandardMaterial({color,roughness:(cat==='arteries'||cat==='veins_sinuses') ? 0.48 : 0.78,metalness:0,side:cat==='meninges_dura'?THREE.DoubleSide:THREE.FrontSide});
   mat.clippingPlanes=activePlane==='none'?[]:[sectionPlane];
   o.material=mat;
   o.userData={...ex,atlasId:id,atlasCategory:cat,atlasLabel:label,atlasSide:side,atlasRegion:region,baseColor:color.clone(),originalMaterial:original};
@@ -97,7 +97,7 @@ function selectStructure(s){
  meshes.forEach(m=>{
   const active=String(m.userData.atlasId??(m.userData.atlasLabel+'|'+m.userData.atlasSide+'|'+m.userData.atlasCategory))===s.id;
   m.material.emissive.setHex(active?0x344d69:0x000000);
-  m.material.emissiveIntensity=active?.55:0;
+  m.material.emissiveIntensity=active ? 0.55 : 0;
  });
  const side={left:'Izquierda',right:'Derecha',median:'Medial / no lateralizada'}[s.side]||s.side;
  const category=categoryNames[s.category]||s.category;
