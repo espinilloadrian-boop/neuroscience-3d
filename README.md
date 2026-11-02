@@ -10,6 +10,7 @@ La aplicación incorpora:
 - Modelo cerebral GLB de Z-Anatomy / BodyParts3D cargado en el navegador.
 - Estructuras individualizadas y selección directa sobre la malla.
 - Búsqueda por nombre anatómico, región y categoría.
+- Filtros para mostrar u ocultar sistemas anatómicos completos.
 - Identificación de lateralidad y sistema anatómico a partir de metadatos del modelo.
 - Rotación, zoom, restablecimiento de cámara y navegación rápida.
 - Planos de recorte axial, coronal y sagital con deslizador.
