@@ -13,7 +13,7 @@ La aplicación incorpora:
 - Filtros para mostrar u ocultar sistemas anatómicos completos.
 - Visualización del hemisferio izquierdo, derecho o ambos.
 - Identificación de lateralidad y sistema anatómico a partir de metadatos del modelo.
-- Primeras fichas anatómicas curadas para hipocampo y tálamo: ubicación, organización, conexiones, funciones, correlatos clínicos y referencias externas.
+- Fichas anatómicas curadas iniciales para hipocampo, tálamo, complejo amigdalino, cerebelo y corteza prefrontal: ubicación, organización, conectividad, funciones, correlatos clínicos, límites de interpretación y referencias externas.
 - Separación entre metadatos del atlas y contenido científico curado; las estructuras sin ficha verificada no reciben descripciones funcionales inferidas.
 - Rotación, zoom, restablecimiento de cámara y navegación rápida.
 - Planos de recorte axial, coronal y sagital con deslizador.
@@ -37,7 +37,7 @@ El modelo ofrece anatomía macroscópica segmentada con estructuras identificada
 
 Los cortes axial, coronal y sagital de esta versión son planos geométricos de recorte de la malla 3D. No equivalen a imágenes de RM, segmentaciones volumétricas nativas ni reconstrucciones histológicas.
 
-Las fichas funcionales y clínicas se incorporan de forma progresiva y solo para estructuras cuya correspondencia anatómica haya sido revisada. La versión actual incluye fichas iniciales de hipocampo y tálamo; no debe extrapolarse su contenido a otras estructuras. No se infieren funciones, conectividad o relaciones causales únicamente a partir de su geometría.
+Las fichas funcionales y clínicas se incorporan de forma progresiva y solo para estructuras cuya correspondencia anatómica haya sido revisada. La versión actual incluye fichas iniciales de hipocampo, tálamo, complejo amigdalino, cerebelo y corteza prefrontal; no debe extrapolarse su contenido a otras estructuras. No se infieren funciones, conectividad o relaciones causales únicamente a partir de su geometría.
 
 ## Ejecutar localmente
 
