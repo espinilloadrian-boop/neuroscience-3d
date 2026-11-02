@@ -89,3 +89,5 @@ Neuroscience 3D es una herramienta educativa y de investigación; no constituye 
 ## Tecnologías
 
 Vite, JavaScript, Three.js, GLTFLoader y DRACOLoader.
+
+- Laboratorio de datos local para fluencia semántica: importación CSV (separador coma o punto y coma), descriptivos por grupo, correlaciones de Pearson exploratorias y AUC binaria por rangos. El procesamiento ocurre en el navegador; no se transmiten los datos. No reemplaza análisis inferenciales ni validación clínica.
