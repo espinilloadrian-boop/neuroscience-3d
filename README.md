@@ -25,6 +25,7 @@ La aplicación incorpora:
 - Advertencias de adaptación, normas locales, licencias y límites interpretativos; incluye referencia a datos normativos de Buenos Aires publicados en 2026 para RAVLT, TMT y fluencia verbal.
 - Laboratorio metodológico de fluencia verbal semántica: diseño comparativo control/DCL/Alzheimer, frecuencia léxica, similitud vectorial, clustering/switching, latencias, educación, análisis estadístico y reproducibilidad. No contiene datos ni resultados simulados.
 - Explorador de microanatomía y neurofisiología: capas corticales, neuronas piramidales, interneuronas, astrocitos, oligodendrocitos, microglía, sinapsis, potencial de acción, plasticidad y neurotransmisores.
+- Explorador de dominios cognitivos: memoria episódica y de trabajo, atención, funciones ejecutivas, lenguaje, habilidades visuoespaciales, cognición social, emoción, memoria semántica y praxias; enlaza fichas de evaluación y correlación anatómica.
 - Navegación desde escenarios clínicos y fichas de correlación hacia las estructuras disponibles en el atlas 3D.
 - Interfaz adaptable a escritorio, tablet y móvil.
 
