@@ -105,6 +105,7 @@ function registerModel(gltf){
  renderTractExplorer();
  renderNeuroimagingExplorer();
  renderClinicalCaseExplorer();
+ renderCorrelationExplorer();
 }
 
 function applyVisibility(mesh){const catOn=layerEnabled.get(mesh.userData.atlasCategory)!==false;const side=mesh.userData.atlasSide;const sideOn=activeHemisphere==='both'||side==='median'||side===activeHemisphere;mesh.visible=catOn&&sideOn;}
