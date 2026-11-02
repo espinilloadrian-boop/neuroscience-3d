@@ -82,7 +82,7 @@
             <div class="research-data-tool">
               <h4>Analizador de datos de fluencia semántica</h4>
               <p class="muted">Importá un CSV anonimizado. El procesamiento se realiza localmente en tu navegador; el archivo no se transmite a un servidor.</p>
-              <label class="research-upload">Seleccionar archivo CSV<input id="research-csv-file" type="file" accept=".csv,text/csv"></label>
+              <label class="research-upload">Seleccionar archivo CSV<input id="research-csv-file" type="file" accept=".csv,text/csv"></label> <a class="research-template-link" href="./research-template.csv" download>Descargar plantilla CSV vacía ↧</a>
               <p id="research-data-status" class="muted" aria-live="polite">Esperando un archivo. Una fila por participante.</p>
               <div class="research-template"><strong>Columnas reconocidas</strong><code>group, participant_id, total_words, mean_log_frequency, mean_semantic_similarity, clustering, switching, first_latency, age, education</code><small>Se aceptan encabezados equivalentes en español. Solo group es obligatorio; cada análisis usa los casos disponibles para esa variable.</small></div>
               <div id="research-data-results" class="research-data-results" aria-live="polite"></div>
