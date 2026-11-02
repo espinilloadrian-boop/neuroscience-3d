@@ -11,6 +11,7 @@ La aplicación incorpora:
 - Estructuras individualizadas y selección directa sobre la malla.
 - Búsqueda por nombre anatómico, región y categoría.
 - Filtros para mostrar u ocultar sistemas anatómicos completos.
+- Visualización del hemisferio izquierdo, derecho o ambos.
 - Identificación de lateralidad y sistema anatómico a partir de metadatos del modelo.
 - Rotación, zoom, restablecimiento de cámara y navegación rápida.
 - Planos de recorte axial, coronal y sagital con deslizador.
