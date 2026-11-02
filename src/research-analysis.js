@@ -164,3 +164,26 @@ export function dunnPostHoc(rows,field){
  ordered.forEach((item,index)=>{running=Math.max(running,Math.min(1,(m-index)*item.p));item.pHolm=running;});
  return pairs;
 }
+
+
+export function bootstrapAuc(rows,field,groupA,groupB,iterations=2000){
+ const a=rows.filter(r=>r.group===groupA&&Number.isFinite(r[field])).map(r=>r[field]);
+ const b=rows.filter(r=>r.group===groupB&&Number.isFinite(r[field])).map(r=>r[field]);
+ const point=pairwiseAuc(rows,field,groupA,groupB);
+ if(a.length<2||b.length<2||point.auc===null)return {...point,ci:null,iterations:0};
+ // PRNG determinista para que el mismo archivo produzca el mismo intervalo.
+ let seed=2166136261;
+ for(const ch of String(field+"|"+groupA+"|"+groupB+"|"+a.join(",")+"|"+b.join(",")))seed=Math.imul(seed^ch.charCodeAt(0),16777619)>>>0;
+ const random=()=>{seed=(Math.imul(1664525,seed)+1013904223)>>>0;return seed/4294967296;};
+ const values=[];
+ for(let it=0;it<iterations;it++){
+  const sampleA=Array.from({length:a.length},()=>a[Math.floor(random()*a.length)]);
+  const sampleB=Array.from({length:b.length},()=>b[Math.floor(random()*b.length)]);
+  let wins=0,ties=0;
+  for(const x of sampleA)for(const y of sampleB){if(y>x)wins++;else if(y===x)ties++;}
+  values.push((wins+.5*ties)/(sampleA.length*sampleB.length));
+ }
+ values.sort((x,y)=>x-y);
+ const quantile=q=>values[Math.min(values.length-1,Math.max(0,Math.ceil(q*values.length)-1))];
+ return {...point,ci:[quantile(.025),quantile(.975)],iterations};
+}
