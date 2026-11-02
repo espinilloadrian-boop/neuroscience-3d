@@ -11,6 +11,7 @@ import { clinicalCases } from './clinical-cases.js';
 import { clinicalCaseLinks } from './clinical-case-links.js';
 import { correlations } from './clinical-correlation.js';
 import { neuropsychTests } from './neuropsych-tests.js';
+import { researchLab } from './research-lab.js';
 
 const MODEL_URL='https://raw.githubusercontent.com/itayinbarr/brainproject/2929e94f521a8ddceab26bc100a98dc06b0da060/brain-atlas/models/brain.glb';
 const MANIFEST_URL='https://raw.githubusercontent.com/itayinbarr/brainproject/2929e94f521a8ddceab26bc100a98dc06b0da060/brain-atlas/models/manifest.json';
@@ -108,6 +109,7 @@ function registerModel(gltf){
  renderClinicalCaseExplorer();
  renderCorrelationExplorer();
  renderAssessmentExplorer();
+ renderResearchLab();
 }
 
 function applyVisibility(mesh){const catOn=layerEnabled.get(mesh.userData.atlasCategory)!==false;const side=mesh.userData.atlasSide;const sideOn=activeHemisphere==='both'||side==='median'||side===activeHemisphere;mesh.visible=catOn&&sideOn;}
@@ -303,6 +305,19 @@ function renderAssessmentExplorer(){
  }
  renderList('');
  search?.addEventListener('input',()=>renderList(search.value));
+}
+
+
+function renderResearchLab(){
+ const detail=document.querySelector('#research-lab-detail');if(!detail)return;
+ const list=(items)=>'<ul class="research-list">'+items.map(item=>'<li>'+escapeHtml(item)+'</li>').join('')+'</ul>';
+ const refs=researchLab.references.map(([label,url])=>'<li><a href="'+escapeHtml(url)+'" target="_blank" rel="noopener noreferrer">'+escapeHtml(label)+' ↗</a></li>').join('');
+ const objectives=list(researchLab.objectives);
+ const groups=list(researchLab.groups);
+ const variables=researchLab.variables.map(v=>'<article class="research-item"><strong>'+escapeHtml(v.name)+'</strong><small>'+escapeHtml(v.role)+'</small><p class="muted">'+escapeHtml(v.definition)+'</p></article>').join('');
+ const pipeline=researchLab.pipeline.map(v=>'<article class="research-item"><strong>'+escapeHtml(v.step)+'</strong><p class="muted">'+escapeHtml(v.detail)+'</p></article>').join('');
+ const analysis=researchLab.analysis.map(v=>'<article class="research-item"><strong>'+escapeHtml(v.name)+'</strong><p class="muted">'+escapeHtml(v.detail)+'</p></article>').join('');
+ detail.innerHTML='<p class="network-tag">PROTOCOLO · MARCO REPRODUCIBLE</p><h4>'+escapeHtml(researchLab.title)+'</h4><p class="muted">'+escapeHtml(researchLab.subtitle)+'</p><section class="network-section"><h5>Pregunta de investigación</h5><p class="muted">'+escapeHtml(researchLab.question)+'</p></section><section class="network-section"><h5>Diseño</h5><p class="muted">'+escapeHtml(researchLab.design)+'</p></section><section class="network-section"><h5>Grupos de comparación</h5>'+groups+'</section><section class="network-section"><h5>Objetivos</h5>'+objectives+'</section><section class="network-section"><h5>Variables y definiciones operacionales</h5>'+variables+'</section><section class="network-section"><h5>Pipeline de análisis</h5>'+pipeline+'</section><section class="network-section"><h5>Estrategia estadística</h5>'+analysis+'</section><section class="network-section"><h5>Precauciones metodológicas y éticas</h5>'+list(researchLab.safeguards)+'</section><section class="network-section"><h5>Referencias iniciales</h5><ul class="fact-references">'+refs+'</ul></section><p class="correlation-note muted">Antes del análisis confirmatorio: cerrar protocolo, definir variable primaria, cálculo muestral, criterios de exclusión, manejo de datos faltantes y plan de validación. No se han cargado resultados empíricos.</p>';
 }
 
 function renderLayerControls(){
