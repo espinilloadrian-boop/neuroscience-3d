@@ -32,6 +32,55 @@ export const structureFacts = [
       { label: "The thalamus: Structure, function, and neurotherapeutics (2025)", url: "https://pmc.ncbi.nlm.nih.gov/articles/PMC12014413/" }
     ]
   }
+  ,
+  {
+    match: ["amygdala", "amygdaloid complex", "amygdaloid body", "amigdala"],
+    title: "Complejo amigdalino",
+    location: "Región anteromedial del lóbulo temporal, anterior a la formación hipocampal y próxima al extremo anterior del asta temporal del ventrículo lateral.",
+    boundaries: "Complejo heterogéneo de núcleos: grupos basolateral, centromedial y cortical, además de áreas de transición y componentes de la amígdala extendida. No constituye un núcleo unitario.",
+    brodmann: "No posee un área de Brodmann: es un conjunto de núcleos subcorticales.",
+    connections: "Recibe información de cortezas sensoriales y asociativas, hipocampo y corteza prefrontal. Sus salidas incluyen la estría terminal y la vía amigdalófuga ventral hacia hipotálamo, área septal, tálamo y tronco encefálico. La conectividad varía entre núcleos.",
+    functions: "Interviene en aprendizaje asociativo con relevancia emocional, valoración de saliencia, memoria emocional y coordinación de respuestas autonómicas y conductuales. No es un 'centro del miedo': participa en múltiples procesos y contextos.",
+    clinical: "Alteraciones de sus circuitos se estudian en epilepsia temporal, trastorno por estrés postraumático, ansiedad y demencias. La asociación no implica que una diferencia estructural aislada confirme un trastorno.",
+    limitation: "La etiqueta global del atlas no permite distinguir subnúcleos ni inferir conectividad funcional individual. Para ello se requieren segmentaciones y métodos específicos.",
+    references: [
+      { label: "McDonald & Mott — Functional neuroanatomy of amygdalohippocampal interconnections (2017)", url: "https://pubmed.ncbi.nlm.nih.gov/26876924/" },
+      { label: "The Cortico-Limbo-Thalamo-Cortical Circuits (2023)", url: "https://pmc.ncbi.nlm.nih.gov/articles/PMC10164017/" },
+      { label: "AbuHasan et al. — Neuroanatomy, Amygdala (StatPearls, 2023)", url: "https://www.ncbi.nlm.nih.gov/books/NBK537102/" }
+    ]
+  },
+  {
+    match: ["cerebellum", "cerebelo"],
+    title: "Cerebelo",
+    location: "Fosa craneal posterior, dorsal al puente y bulbo raquídeo; conectado al tronco encefálico por los pedúnculos cerebelosos superior, medio e inferior.",
+    boundaries: "Se organiza en vermis y hemisferios; lóbulos anterior, posterior y floculonodular; y zonas longitudinales. La corteza presenta capas molecular, de Purkinje y granulosa, con núcleos profundos.",
+    brodmann: "No corresponde: la corteza cerebelosa no se clasifica mediante áreas de Brodmann.",
+    connections: "Aferencias por fibras musgosas y trepadoras a través de los pedúnculos. Las células de Purkinje constituyen la salida de la corteza cerebelosa hacia núcleos profundos y vestibulares. La salida cerebelosa alcanza tálamo y tronco encefálico; existen circuitos recíprocos con áreas motoras, prefrontales y asociativas.",
+    functions: "Participa en coordinación, temporización, adaptación y aprendizaje motor. Sus circuitos posteriores y laterales también se relacionan con lenguaje, memoria de trabajo, funciones ejecutivas y regulación afectiva, en interacción con redes cerebrales distribuidas.",
+    clinical: "Las lesiones pueden producir ataxia, dismetría, disartria y alteraciones oculomotoras. Lesiones posteriores pueden acompañarse de síndrome cognitivo-afectivo cerebeloso, con alteraciones ejecutivas, visuoespaciales, lingüísticas y afectivas.",
+    limitation: "La función depende de lobulillos, zonas y circuitos específicos; 'cerebelo' no es una unidad funcional homogénea. La topografía cognitiva se apoya en evidencia convergente, pero no permite atribuir una función compleja a un único lobulillo.",
+    references: [
+      { label: "Schmahmann et al. — The Theory and Neuroscience of Cerebellar Cognition (2019)", url: "https://doi.org/10.1146/annurev-neuro-070918-050258" },
+      { label: "Diedrichsen & McDougle — How does the cerebellum contribute to cognitive functions? (2026)", url: "https://doi.org/10.1371/journal.pbio.3003688" },
+      { label: "Benagiano et al. — The functional anatomy of the cerebrocerebellar circuit (2018)", url: "https://pubmed.ncbi.nlm.nih.gov/29238972/" }
+    ]
+  },
+  {
+    match: ["prefrontal cortex", "corteza prefrontal", "prefrontal"],
+    title: "Corteza prefrontal",
+    location: "Porción anterior del lóbulo frontal, por delante de las cortezas premotora y motora. Incluye territorios dorsolateral, ventrolateral, orbitofrontal y medial/cingulado anterior, con límites dependientes del criterio anatómico y funcional.",
+    boundaries: "No es una única área citoarquitectónica. Comprende regiones con perfiles laminares y conexiones diferenciados; las delimitaciones entre corteza prefrontal y premotora no son idénticas en todos los atlas.",
+    brodmann: "Se suelen relacionar BA 9, 10, 11, 12, 46 y 47, y porciones de BA 24, 25 y 32 en regiones mediales/cinguladas; la correspondencia depende de la subdivisión y del atlas. No asignar una BA única a toda la corteza prefrontal.",
+    connections: "Conectividad recíproca con núcleos mediodorsales y otros núcleos talámicos, estriado, amígdala, hipocampo y cortezas parietales, temporales y sensoriales. Participa en bucles frontoestriatales y circuitos cortico-límbicos.",
+    functions: "Contribuye a control ejecutivo, memoria de trabajo, planificación, flexibilidad, selección de acciones, regulación emocional, toma de decisiones y conducta social. Los subterritorios participan en operaciones diferentes y coordinadas.",
+    clinical: "La disfunción de circuitos prefrontales puede expresarse en alteraciones ejecutivas, apatía, desinhibición, dificultades de planificación y regulación socioemocional. Estos perfiles no son específicos de una lesión o diagnóstico único.",
+    limitation: "La expresión 'corteza prefrontal' agrupa subregiones heterogéneas. Las áreas de Brodmann son una referencia citoarquitectónica histórica, no equivalen directamente a módulos funcionales ni a límites individuales de neuroimagen.",
+    references: [
+      { label: "The anatomical relationships of the prefrontal cortex with limbic structures and basal ganglia (1997)", url: "https://pubmed.ncbi.nlm.nih.gov/9208373/" },
+      { label: "Kovner et al. — Cortico-Limbic Interactions Mediate Adaptive and Maladaptive Responses (2020)", url: "https://pubmed.ncbi.nlm.nih.gov/31787014/" },
+      { label: "The Cortico-Limbo-Thalamo-Cortical Circuits (2023)", url: "https://pmc.ncbi.nlm.nih.gov/articles/PMC10164017/" }
+    ]
+  }
 ];
 
 export function findStructureFact(label) {
