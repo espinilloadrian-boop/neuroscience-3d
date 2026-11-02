@@ -5,6 +5,7 @@ import { DRACOLoader } from 'three/addons/loaders/DRACOLoader.js';
 import './style.css';
 
 const MODEL_URL='https://raw.githubusercontent.com/itayinbarr/brainproject/2929e94f521a8ddceab26bc100a98dc06b0da060/brain-atlas/models/brain.glb';
+const MANIFEST_URL='https://raw.githubusercontent.com/itayinbarr/brainproject/2929e94f521a8ddceab26bc100a98dc06b0da060/brain-atlas/models/manifest.json';
 const DRACO_URL='https://www.gstatic.com/draco/versioned/decoders/1.5.6/';
 const sceneHost=document.querySelector('#scene');
 const scene=new THREE.Scene();
@@ -38,6 +39,7 @@ floorGrid.position.y=-1.9;floorGrid.material.transparent=true;floorGrid.material
 
 const categoryNames={cortex:'Corteza cerebral',white_matter:'Sustancia blanca',deep_grey:'Núcleos grises profundos',diencephalon:'Diencéfalo',brainstem:'Tronco encefálico',cerebellum:'Cerebelo',ventricles:'Sistema ventricular',arteries:'Arterias',veins_sinuses:'Venas y senos venosos',cranial_nerves:'Nervios craneales',meninges_dura:'Meninges',tracts:'Tractos de sustancia blanca'};
 const categoryColors={cortex:0xb5a4d8,white_matter:0xd6c6a4,deep_grey:0x9a83bd,diencephalon:0x7ea9c9,brainstem:0x9e9cae,cerebellum:0xc28fbd,ventricles:0x65b7c4,arteries:0xd77878,veins_sinuses:0x779ad1,cranial_nerves:0xd6b36f,meninges_dura:0x9a9b9e,tracts:0x75b6a5};
+let manifestById=new Map();
 const meshes=[];const structures=new Map();const layerEnabled=new Map();let selectedId=null;let labelsOn=true;let activePlane='none';let activeHemisphere='both';
 const info=document.querySelector('#structure-info');
 const loading=document.querySelector('#loading');
@@ -60,10 +62,12 @@ function registerModel(gltf){
   if(!o.isMesh)return;
   const ex=readExtras(o);
   const id=ex.bx_id??ex.nodeId??null;
-  const cat=ex.bx_cat||ex.cat||'other';
-  const label=ex.bx_label||ex.label||o.name||'Estructura anatómica';
-  const side=ex.bx_side||ex.side||'median';
-  const region=ex.bx_region||ex.region||'Sistema nervioso central';
+  const meta=id!==null?(manifestById.get(String(id))||{}):{};
+  const cat=meta.category||ex.bx_cat||ex.cat||'other';
+  const label=meta.label||ex.bx_label||ex.label||o.name||'Estructura anatómica';
+  const side=meta.side||ex.bx_side||ex.side||'median';
+  const region=meta.region||ex.bx_region||ex.region||'Sistema nervioso central';
+  const ta2=meta.ta2||[];
   const color=new THREE.Color(categoryColors[cat]??0x9eacc1);
   const original=Array.isArray(o.material)?o.material[0]:o.material;
   const mat=new THREE.MeshStandardMaterial({color,roughness:(cat==='arteries'||cat==='veins_sinuses') ? 0.48 : 0.78,metalness:0,side:cat==='meninges_dura'?THREE.DoubleSide:THREE.FrontSide});
@@ -72,7 +76,7 @@ function registerModel(gltf){
   o.userData={...ex,atlasId:id,atlasCategory:cat,atlasLabel:label,atlasSide:side,atlasRegion:region,baseColor:color.clone(),originalMaterial:original};
   meshes.push(o);
   const key=id!==null?String(id):label+'|'+side+'|'+cat;
-  if(!structures.has(key))structures.set(key,{id:key,label,category:cat,side,region,mesh:o,meshes:[],source:ex.bx_source||'Z-Anatomy / BodyParts3D'});
+  if(!structures.has(key))structures.set(key,{id:key,label,category:cat,side,region,ta2,mesh:o,meshes:[],source:meta.source||ex.bx_source||'Z-Anatomy / BodyParts3D'});
   structures.get(key).meshes.push(o);
  });
  const coreBox=new THREE.Box3();let hasCore=false;
@@ -104,7 +108,8 @@ function selectStructure(s){
  });
  const side={left:'Izquierda',right:'Derecha',median:'Medial / no lateralizada'}[s.side]||s.side;
  const category=categoryNames[s.category]||s.category;
- info.innerHTML='<div class="region-kicker">'+category.toUpperCase()+'</div><h2>'+escapeHtml(s.label)+'</h2><p class="muted">'+escapeHtml(s.region)+' · '+side+'</p><div class="panel-divider"></div><p class="eyebrow">IDENTIFICACIÓN ANATÓMICA</p><p class="muted">Estructura individual del atlas TA2, vinculada a su malla 3D y metadatos de origen. La descripción funcional detallada se incorporará en la siguiente etapa con referencias bibliográficas verificadas.</p><div class="anatomy-note"><strong>Procedencia</strong><p>'+escapeHtml(s.source)+'. La resolución y el grado de detalle dependen de la categoría anatómica; consultar las limitaciones del modelo.</p></div>';
+ const ta2Path=s.ta2.filter(x=>!['Bonus collection','Brain','Central nervous system','Head','Main divisions','Nervous system','Regions of human body','Scene Collection'].includes(x)).slice(-5).join(' › ');
+ info.innerHTML='<div class="region-kicker">'+category.toUpperCase()+'</div><h2>'+escapeHtml(s.label)+'</h2><p class="muted">'+escapeHtml(s.region)+' · '+side+'</p><div class="panel-divider"></div><p class="eyebrow">JERARQUÍA ANATÓMICA TA2</p><p class="muted">'+escapeHtml(ta2Path||s.region)+'</p><div class="panel-divider"></div><p class="eyebrow">IDENTIFICACIÓN ANATÓMICA</p><p class="muted">Estructura individual del atlas, vinculada a su malla 3D y metadatos de origen. La descripción funcional detallada se incorporará en la siguiente etapa con referencias bibliográficas verificadas.</p><div class="anatomy-note"><strong>Procedencia</strong><p>'+escapeHtml(s.source)+'. La resolución y el grado de detalle dependen de la categoría anatómica; consultar las limitaciones del modelo.</p></div>';
  buttons.forEach(b=>b.classList.toggle('selected',normalise(b.dataset.region)===normalise(s.category)||normalise(b.dataset.region)===normalise(s.region)));
 }
 function escapeHtml(s){return String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));}
@@ -112,7 +117,7 @@ function renderSearch(query){
  if(!searchResults)return;
  const q=normalise(query);
  const all=[...structures.values()];
- const matches=(q?all.filter(s=>normalise(s.label+' '+s.region+' '+s.category+' '+s.side).includes(q)):all)
+ const matches=(q?all.filter(s=>normalise(s.label+' '+s.region+' '+s.category+' '+s.side+' '+s.ta2.join(' ')).includes(q)):all)
   .sort((a,b)=>a.label.localeCompare(b.label,'es')).slice(0,30);
  searchResults.innerHTML='';
  if(!matches.length){searchResults.innerHTML='<div class="search-empty">No se encontraron coincidencias.</div>';return;}
@@ -179,6 +184,6 @@ function animate(){requestAnimationFrame(animate);controls.update();renderer.ren
 
 const draco=new DRACOLoader();draco.setDecoderPath(DRACO_URL);
 const loader=new GLTFLoader();loader.setDRACOLoader(draco);
-loader.load(MODEL_URL,registerModel,progress=>{
- if(progress.total)loading.textContent='Cargando modelo anatómico… '+Math.round(progress.loaded/progress.total*100)+'%';
-},err=>{console.error('No se pudo cargar el modelo anatómico:',err);showError('El servidor de origen o el decodificador no respondió. Volvé a cargar la página cuando haya conexión.');});
+fetch(MANIFEST_URL).then(response=>{if(!response.ok)throw new Error('Manifest HTTP '+response.status);return response.json();}).then(manifest=>{manifestById=new Map((manifest.nodes||[]).map(node=>[String(node.id),node]));loading.textContent='Metadatos cargados. Descargando geometría 3D…';}).catch(err=>{console.warn('No se pudo cargar el manifiesto anatómico; se usarán metadatos glTF:',err);}).finally(()=>{
+ loader.load(MODEL_URL,registerModel,progress=>{if(progress.total)loading.textContent='Cargando modelo anatómico… '+Math.round(progress.loaded/progress.total*100)+'%';},err=>{console.error('No se pudo cargar el modelo anatómico:',err);showError('El servidor de origen o el decodificador no respondió. Volvé a cargar la página cuando haya conexión.');});
+});
