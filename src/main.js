@@ -4,6 +4,7 @@ import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
 import { DRACOLoader } from 'three/addons/loaders/DRACOLoader.js';
 import './style.css';
 import { findStructureFact } from './structure-facts.js';
+import { networks } from './networks.js';
 
 const MODEL_URL='https://raw.githubusercontent.com/itayinbarr/brainproject/2929e94f521a8ddceab26bc100a98dc06b0da060/brain-atlas/models/brain.glb';
 const MANIFEST_URL='https://raw.githubusercontent.com/itayinbarr/brainproject/2929e94f521a8ddceab26bc100a98dc06b0da060/brain-atlas/models/manifest.json';
@@ -95,6 +96,7 @@ function registerModel(gltf){
  info.innerHTML='<div class="region-kicker">ATLAS ANATÓMICO · TA2</div><h2>Modelo anatómico cargado</h2><p class="muted">Se cargaron '+count+' estructuras identificables. Buscá por nombre o seleccioná directamente una región del modelo.</p><p class="muted" style="margin-top:12px">Las estructuras profundas y algunos tractos son aproximaciones registradas en espacio MNI (resolución aproximada de 7 mm); no tienen precisión clínica.</p>';
  renderSearch('');
  renderLayerControls();
+ renderNetworkExplorer();
 }
 
 function applyVisibility(mesh){const catOn=layerEnabled.get(mesh.userData.atlasCategory)!==false;const side=mesh.userData.atlasSide;const sideOn=activeHemisphere==='both'||side==='median'||side===activeHemisphere;mesh.visible=catOn&&sideOn;}
@@ -131,6 +133,34 @@ function renderSearch(query){
   searchResults.appendChild(b);
  });
 }
+
+function renderNetworkExplorer(){
+ const host=document.querySelector('#network-list');
+ const detail=document.querySelector('#network-detail');
+ if(!host||!detail)return;
+ host.innerHTML='';
+ networks.forEach((network,index)=>{
+  const button=document.createElement('button');
+  button.type='button';button.className='network-choice'+(index===0?' active':'');
+  button.innerHTML='<strong>'+escapeHtml(network.name)+'</strong><small>'+escapeHtml(network.tag)+'</small>';
+  button.addEventListener('click',()=>showNetwork(network,button));
+  host.appendChild(button);
+ });
+ showNetwork(networks[0],host.querySelector('button'));
+ function showNetwork(network,button){
+  host.querySelectorAll('button').forEach(b=>b.classList.toggle('active',b===button));
+  const refs=network.refs.map(([label,url])=>'<li><a href="'+escapeHtml(url)+'" target="_blank" rel="noopener noreferrer">'+escapeHtml(label)+' ↗</a></li>').join('');
+  const nodes=network.nodes.map(node=>'<button type="button" class="network-node" data-node="'+escapeHtml(node)+'">'+escapeHtml(node)+'</button>').join('');
+  detail.innerHTML='<p class="network-tag">'+escapeHtml(network.tag)+'</p><h4>'+escapeHtml(network.name)+'</h4><p class="muted">'+escapeHtml(network.summary)+'</p><section class="network-section"><h5>Recorrido esquemático</h5><p class="muted">'+escapeHtml(network.route)+'</p></section><section class="network-section"><h5>Estructuras relacionadas</h5><div class="network-nodes">'+nodes+'</div></section><section class="network-section"><h5>Funciones</h5><p class="muted">'+escapeHtml(network.function)+'</p></section><section class="network-section"><h5>Correlatos clínicos</h5><p class="muted">'+escapeHtml(network.clinical)+'</p></section><section class="network-section"><h5>Alcance y límites</h5><p class="muted">'+escapeHtml(network.caveat)+'</p></section><section class="network-section"><h5>Bibliografía</h5><ul class="fact-references">'+refs+'</ul></section>';
+  detail.querySelectorAll('[data-node]').forEach(nodeButton=>nodeButton.addEventListener('click',()=>{
+   const term=nodeButton.dataset.node;
+   searchInput.value=term;renderSearch(term);
+   const found=[...structures.values()].find(s=>normalise(s.label+' '+s.region+' '+s.category+' '+s.ta2.join(' ')).includes(normalise(term)));
+   if(found){controls.autoRotate=false;selectStructure(found);}
+  }));
+ }
+}
+
 function renderLayerControls(){
  const host=document.querySelector('#layer-controls');if(!host)return;
  const counts=new Map();structures.forEach(s=>counts.set(s.category,(counts.get(s.category)||0)+1));
