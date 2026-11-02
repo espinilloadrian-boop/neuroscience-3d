@@ -47,7 +47,7 @@ const searchInput=document.querySelector('#structure-search');
 const searchResults=document.querySelector('#search-results');
 
 function normalise(s){return (s||'').toString().normalize('NFD').replace(/[\u0300-\u036f]/g,'').toLowerCase();}
-function readExtras(o){return o.userData||{};}
+function readExtras(o){const chain=[];let node=o;while(node){chain.unshift(node.userData||{});node=node.parent;}return Object.assign({},...chain);}
 function showError(message){
  loading.classList.add('hidden');
  info.innerHTML='<div class="region-kicker">CARGA DEL MODELO</div><h2>No se pudo cargar el atlas</h2><p class="muted">'+message+'</p><p class="muted">La escena anatómica necesita conexión con el repositorio de origen y el decodificador Draco.</p>';
