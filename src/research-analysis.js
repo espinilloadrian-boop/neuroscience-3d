@@ -89,3 +89,41 @@ export function standardizedMeanDifference(rows,field,groupA,groupB){
  const se=Math.sqrt((n1+n2)/(n1*n2)+d*d/(2*df));
  return {n1,n2,d,g,ci:[g-1.96*J*se,g+1.96*J*se]};
 }
+
+function ranked(values){
+ const order=values.map((v,i)=>({v,i})).sort((a,b)=>a.v-b.v),out=Array(values.length);
+ for(let i=0;i<order.length;){let j=i+1;while(j<order.length&&order[j].v===order[i].v)j++;const rank=(i+1+j)/2;for(let k=i;k<j;k++)out[order[k].i]=rank;i=j;}
+ return out;
+}
+export function spearman(x,y){
+ const pairs=x.map((v,i)=>[v,y[i]]).filter(p=>Number.isFinite(p[0])&&Number.isFinite(p[1]));
+ const n=pairs.length;if(n<3)return {n,rho:null};
+ const rx=ranked(pairs.map(p=>p[0])),ry=ranked(pairs.map(p=>p[1]));
+ const result=pearson(rx,ry);return {n,rho:result.r};
+}
+function gammaQ(a,x){
+ if(x<0||a<=0)return NaN;if(x===0)return 1;
+ const gln=Math.logGamma?Math.logGamma(a):logGamma(a);
+ if(x<a+1){let ap=a,sum=1/a,del=sum;for(let n=1;n<=200;n++){ap++;del*=x/ap;sum+=del;if(Math.abs(del)<Math.abs(sum)*1e-14)break;}return Math.max(0,Math.min(1,1-sum*Math.exp(-x+a*Math.log(x)-gln)));}
+ let b=x+1-a,c=1/1e-300,d=1/b,h=d;
+ for(let i=1;i<=200;i++){const an=-i*(i-a);b+=2;d=an*d+b;if(Math.abs(d)<1e-300)d=1e-300;c=b+an/c;if(Math.abs(c)<1e-300)c=1e-300;d=1/d;const del=d*c;h*=del;if(Math.abs(del-1)<1e-14)break;}
+ return Math.max(0,Math.min(1,Math.exp(-x+a*Math.log(x)-gln)*h));
+}
+function logGamma(z){
+ const p=[676.5203681218851,-1259.1392167224028,771.3234287776531,-176.6150291621406,12.507343278686905,-.13857109526572012,9.984369578019572e-6,1.5056327351493116e-7];
+ if(z<.5)return Math.log(Math.PI)-Math.log(Math.sin(Math.PI*z))-logGamma(1-z);
+ z-=1;let x=.99999999999980993;for(let i=0;i<p.length;i++)x+=p[i]/(z+i+1);
+ const t=z+p.length-.5;return .5*Math.log(2*Math.PI)+(z+.5)*Math.log(t)-t+Math.log(x);
+}
+export function kruskalWallis(rows,field){
+ const groups=[...new Set(rows.map(r=>r.group))].map(group=>({group,values:rows.filter(r=>r.group===group&&Number.isFinite(r[field])).map(r=>r[field])})).filter(g=>g.values.length);
+ const all=groups.flatMap(g=>g.values),N=all.length,k=groups.length;
+ if(k<2||N<=k)return {k,N,H:null,p:null,epsilonSquared:null};
+ const order=ranked(all),offsets=[];let at=0;for(const g of groups){offsets.push({n:g.values.length,rankSum:order.slice(at,at+g.values.length).reduce((s,v)=>s+v,0)});at+=g.values.length;}
+ let H=12/(N*(N+1))*offsets.reduce((s,g)=>s+g.rankSum*g.rankSum/g.n,0)-3*(N+1);
+ const freq=new Map();all.forEach(v=>freq.set(v,(freq.get(v)||0)+1));
+ const tie=1-[...freq.values()].reduce((s,t)=>s+(t**3-t),0)/(N**3-N);
+ if(tie>0)H/=tie;else return {k,N,H:null,p:null,epsilonSquared:null};
+ const df=k-1,p=gammaQ(df/2,H/2),epsilonSquared=Math.max(0,(H-k+1)/(N-k));
+ return {k,N,H,p,df,epsilonSquared,groups:groups.map(g=>({group:g.group,n:g.values.length}))};
+}
