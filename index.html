@@ -11,14 +11,14 @@
     <div id="app">
       <header class="topbar">
         <a class="brand" href="#" aria-label="Neuroscience 3D inicio"><span class="brand-mark">N³</span><span><strong>NEUROSCIENCE</strong><small>3D · ATLAS INTERACTIVO</small></span></a>
-        <div class="top-meta"><span class="live-dot"></span> PROTOTIPO · FASE 1 <span class="version">v0.1</span></div>
+        <div class="top-meta"><span class="live-dot"></span> ATLAS INTERACTIVO · FASE 1 <span class="version">v0.2</span></div>
       </header>
       <main class="workspace">
         <section class="viewer-panel">
           <div class="viewer-heading"><div><p class="eyebrow">EXPLORADOR ANATÓMICO</p><h1>Encéfalo humano</h1></div><span class="orientation">VISTA 3D · INTERACTIVA</span></div>
           <div id="scene-wrap"><div id="scene"></div><div class="scene-hint">Arrastrá para rotar <i>·</i> Rueda para zoom <i>·</i> Clic para seleccionar</div><div class="model-credit" id="model-credit">MODELO ANATÓMICO EXTERNO · CARGA PENDIENTE</div><div class="axis-label axis-a">ANTERIOR</div><div class="axis-label axis-p">POSTERIOR</div><div class="loading" id="loading">Construyendo modelo 3D…</div></div>
           <div class="section-controls" aria-label="Planos de corte"><span class="section-label">SECCIÓN</span><button class="section-button active" data-plane="none">Completo</button><button class="section-button" data-plane="axial">Axial</button><button class="section-button" data-plane="coronal">Coronal</button><button class="section-button" data-plane="sagittal">Sagital</button><input id="section-position" type="range" min="-1.8" max="1.8" step="0.05" value="0" aria-label="Posición del plano de corte" disabled /></div>
-          <div class="viewer-toolbar"><label class="hemisphere-control"><span>HEMISFERIO</span><select id="hemisphere-select"><option value="both">Ambos</option><option value="left">Izquierdo</option><option value="right">Derecho</option></select></label><button id="reset-view" class="tool-button">↺ <span>Restablecer vista</span></button><div class="view-state" id="view-state">Vista lateral izquierda</div><button id="toggle-labels" class="tool-button active">◎ <span>Referencias</span></button></div>
+          <div class="viewer-toolbar"><label class="hemisphere-control"><span>HEMISFERIO</span><select id="hemisphere-select"><option value="both">Ambos</option><option value="left">Izquierdo</option><option value="right">Derecho</option></select></label><button id="reset-view" class="tool-button">↺ <span>Restablecer vista</span></button><div class="view-state" id="view-state">Vista lateral izquierda</div><button id="toggle-labels" class="tool-button active">◎ <span>Guías visuales</span></button></div>
         </section>
         <aside class="info-panel">
           <div class="panel-top"><span class="eyebrow">ESTRUCTURA SELECCIONADA</span><span class="status-tag">MODO EXPLORACIÓN</span></div>
@@ -36,7 +36,7 @@
             <button data-region="cerebellum">05 <span>Cerebelo</span><b>→</b></button>
             <button data-region="brainstem">06 <span>Tronco encefálico</span><b>→</b></button>
           </div>
-          <div class="disclaimer"><strong>Nota anatómica</strong><p>La geometría de esta versión es esquemática y tiene fines didácticos. No reproduce con precisión giros, surcos, límites citoarquitectónicos ni coordenadas estereotáxicas. No utilizar con fines diagnósticos.</p></div>
+          <div class="disclaimer"><strong>Alcance y límites anatómicos</strong><p>Se utiliza un modelo 3D anatómico segmentado de Z-Anatomy / BodyParts3D. Algunas estructuras profundas y tractos proceden de registros de atlas en espacio MNI y son aproximados. Los cortes son planos geométricos aplicados a la malla: no son imágenes de RM ni segmentaciones volumétricas. Uso educativo y de investigación; no usar para diagnóstico ni planificación clínica.</p></div>
         </aside>
       </main>
       <footer><span>NEUROSCIENCE 3D</span><span>ANATOMÍA · CONECTIVIDAD · FUNCIÓN · CLÍNICA</span><span>DESARROLLO EN CURSO</span></footer>
