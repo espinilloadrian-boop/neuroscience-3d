@@ -1,12 +1,12 @@
 // Herramientas estadísticas exploratorias para CSV de fluencia verbal.
 // Entrada esperada: una fila por participante; no se envían datos a servidores.
 export function parseCSV(text){
- const rows=[];let row=[],field="",quoted=false;
+ const firstLine=String(text).split(/\r?\n/,1)[0]||"";const delimiter=(firstLine.split(';').length>firstLine.split(',').length)?';':',';\n const rows=[];let row=[],field="",quoted=false;
  for(let i=0;i<text.length;i++){
   const c=text[i],n=text[i+1];
   if(quoted){if(c==='"'&&n==='"'){field+='"';i++;}else if(c==='"')quoted=false;else field+=c;}
   else if(c==='"')quoted=true;
-  else if(c===","){row.push(field);field="";}
+  else if(c===delimiter){row.push(field);field="";}
   else if(c==="\n"){row.push(field);rows.push(row);row=[];field="";}
   else if(c!=="\r")field+=c;
  }
