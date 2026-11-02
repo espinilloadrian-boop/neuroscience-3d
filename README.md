@@ -23,6 +23,7 @@ La aplicación incorpora:
 - Laboratorio de correlación anatomoclínica: ocho estructuras con funciones, manifestaciones, ejemplos de pruebas neuropsicológicas, neuroimagen pertinente, límites y fuentes.
 - Explorador de instrumentos neuropsicológicos: ACE-III/ACE-R, MoCA, MMSE, RAVLT, FCSRT, Figura de Rey, TMT, Stroop, FAB, IFS, fluencia verbal, Boston Naming, NPI, FAQ e Índice de Barthel.
 - Advertencias de adaptación, normas locales, licencias y límites interpretativos; incluye referencia a datos normativos de Buenos Aires publicados en 2026 para RAVLT, TMT y fluencia verbal.
+- Laboratorio metodológico de fluencia verbal semántica: diseño comparativo control/DCL/Alzheimer, frecuencia léxica, similitud vectorial, clustering/switching, latencias, educación, análisis estadístico y reproducibilidad. No contiene datos ni resultados simulados.
 - Navegación desde escenarios clínicos y fichas de correlación hacia las estructuras disponibles en el atlas 3D.
 - Interfaz adaptable a escritorio, tablet y móvil.
 
