@@ -4,7 +4,7 @@ import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
 import { DRACOLoader } from 'three/addons/loaders/DRACOLoader.js';
 import './style.css';
 
-const MODEL_URL='https://raw.githubusercontent.com/itayinbarr/brainproject/main/brain-atlas/models/brain.glb';
+const MODEL_URL='https://raw.githubusercontent.com/itayinbarr/brainproject/2929e94f521a8ddceab26bc100a98dc06b0da060/brain-atlas/models/brain.glb';
 const DRACO_URL='https://www.gstatic.com/draco/versioned/decoders/1.5.6/';
 const sceneHost=document.querySelector('#scene');
 const scene=new THREE.Scene();
