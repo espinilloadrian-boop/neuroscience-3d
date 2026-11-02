@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import {parseCSV,normalizeResearchRows,pearson,spearman,pairwiseAuc,kruskalWallis,dunnPostHoc} from '../src/research-analysis.js';
+import {parseCSV,normalizeResearchRows,pearson,spearman,pairwiseAuc,kruskalWallis,dunnPostHoc,bootstrapAuc} from '../src/research-analysis.js';
 
 test('CSV parser preserves quoted commas and escaped quotes',()=>{
  const rows=parseCSV('group,participant_id,note\nControl,1,"animal, ""gato"""');
@@ -24,9 +24,6 @@ test('Kruskal-Wallis and Dunn-Holm detect separated groups',()=>{
  const kw=kruskalWallis(rows,'v');assert.ok(kw.H>0);assert.ok(kw.p<.05);
  const post=dunnPostHoc(rows,'v');assert.equal(post.length,3);assert.ok(post.every(x=>x.pHolm>=x.p&&x.pHolm<=1));
 });
-import test from 'node:test';
-import assert from 'node:assert/strict';
-import {bootstrapAuc} from '../src/research-analysis.js';
 test('bootstrap AUC returns deterministic percentile interval',()=>{
  const rows=[{group:'Control',x:1},{group:'Control',x:2},{group:'Control',x:3},{group:'DCL',x:4},{group:'DCL',x:5},{group:'DCL',x:6}];
  const a=bootstrapAuc(rows,'x','Control','DCL'),b=bootstrapAuc(rows,'x','Control','DCL');
