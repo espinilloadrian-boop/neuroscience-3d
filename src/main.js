@@ -15,6 +15,7 @@ import { researchLab } from './research-lab.js';
 import { microTopics } from './microanatomy.js';
 import { cognitiveDomains } from './cognitive-domains.js';
 import { neurochemicalSystems } from './neurochemistry.js';
+import { physiologyTopics } from './neurophysiology.js';
 
 const MODEL_URL='https://raw.githubusercontent.com/itayinbarr/brainproject/2929e94f521a8ddceab26bc100a98dc06b0da060/brain-atlas/models/brain.glb';
 const MANIFEST_URL='https://raw.githubusercontent.com/itayinbarr/brainproject/2929e94f521a8ddceab26bc100a98dc06b0da060/brain-atlas/models/manifest.json';
@@ -116,6 +117,7 @@ function registerModel(gltf){
  renderMicroExplorer();
  renderCognitiveDomainExplorer();
  renderNeurochemistryExplorer();
+ renderNeurophysiologyExplorer();
 }
 
 function applyVisibility(mesh){const catOn=layerEnabled.get(mesh.userData.atlasCategory)!==false;const side=mesh.userData.atlasSide;const sideOn=activeHemisphere==='both'||side==='median'||side===activeHemisphere;mesh.visible=catOn&&sideOn;}
@@ -393,6 +395,24 @@ function renderNeurochemistryExplorer(){
   detail.innerHTML='<p class="network-tag">'+escapeHtml(system.family)+'</p><h4>'+escapeHtml(system.name)+'</h4><p class="muted"><strong>Mensajero / principio:</strong> '+escapeHtml(system.transmitter)+'</p>'+sections.map(([heading,value])=>'<section class="network-section"><h5>'+heading+'</h5><p class="muted">'+escapeHtml(value)+'</p></section>').join('')+'<section class="network-section"><h5>Fuentes y lecturas</h5><ul class="fact-references">'+refs+'</ul></section><p class="correlation-note muted">Contenido educativo. No constituye indicación terapéutica ni permite inferir diagnóstico o tratamiento individual. Los efectos farmacológicos dependen de molécula, dosis, vía, comorbilidades e interacciones.</p>';
  }
  show(neurochemicalSystems[0],host.querySelector('button'));
+}
+
+
+function renderNeurophysiologyExplorer(){
+ const host=document.querySelector('#neurophysiology-list'),detail=document.querySelector('#neurophysiology-detail');
+ if(!host||!detail)return;
+ host.innerHTML='';
+ physiologyTopics.forEach((topic,index)=>{
+  const b=document.createElement('button');b.type='button';b.className='network-choice'+(index===0?' active':'');
+  b.innerHTML='<strong>'+escapeHtml(topic.name)+'</strong><small>'+escapeHtml(topic.group)+'</small>';
+  b.addEventListener('click',()=>show(topic,b));host.appendChild(b);
+ });
+ function show(topic,button){
+  host.querySelectorAll('button').forEach(b=>b.classList.toggle('active',b===button));
+  const refs=topic.refs.map(([label,url])=>'<li><a href="'+escapeHtml(url)+'" target="_blank" rel="noopener noreferrer">'+escapeHtml(label)+' ↗</a></li>').join('');
+  detail.innerHTML='<p class="network-tag">'+escapeHtml(topic.group)+'</p><h4>'+escapeHtml(topic.name)+'</h4><p class="muted">'+escapeHtml(topic.summary)+'</p>'+[['Mecanismo fisiológico',topic.mechanism],['Relevancia clínica',topic.clinical],['Límites de interpretación',topic.limit]].map(([heading,value])=>'<section class="network-section"><h5>'+heading+'</h5><p class="muted">'+escapeHtml(value)+'</p></section>').join('')+'<section class="network-section"><h5>Fuentes y lecturas</h5><ul class="fact-references">'+refs+'</ul></section>';
+ }
+ show(physiologyTopics[0],host.querySelector('button'));
 }
 
 function renderLayerControls(){
