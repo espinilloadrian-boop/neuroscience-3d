@@ -9,6 +9,7 @@ import { tracts } from './tracts.js';
 import { modalities } from './neuroimaging.js';
 import { clinicalCases } from './clinical-cases.js';
 import { clinicalCaseLinks } from './clinical-case-links.js';
+import { correlations } from './clinical-correlation.js';
 
 const MODEL_URL='https://raw.githubusercontent.com/itayinbarr/brainproject/2929e94f521a8ddceab26bc100a98dc06b0da060/brain-atlas/models/brain.glb';
 const MANIFEST_URL='https://raw.githubusercontent.com/itayinbarr/brainproject/2929e94f521a8ddceab26bc100a98dc06b0da060/brain-atlas/models/manifest.json';
@@ -243,6 +244,37 @@ function renderClinicalCaseExplorer(){
   }
  }
  show(clinicalCases[0],host.querySelector('button'));
+}
+
+
+function renderCorrelationExplorer(){
+ const host=document.querySelector('#correlation-list'),detail=document.querySelector('#correlation-detail');
+ if(!host||!detail)return;
+ host.innerHTML='';
+ correlations.forEach((item,index)=>{
+  const b=document.createElement('button');b.type='button';b.className='network-choice'+(index===0?' active':'');
+  b.innerHTML='<strong>'+escapeHtml(item.name)+'</strong><small>'+escapeHtml(item.domain)+'</small>';
+  b.addEventListener('click',()=>show(item,b));host.appendChild(b);
+ });
+ function show(item,button){
+  host.querySelectorAll('button').forEach(b=>b.classList.toggle('active',b===button));
+  const aliases=item.aliases.map(normalise);
+  const found=[...structures.values()].find(s=>{
+   const haystack=normalise(s.label+' '+s.region+' '+s.ta2.join(' '));
+   return aliases.some(alias=>haystack.includes(alias));
+  });
+  const atlasAction=found
+   ? '<button type="button" class="clinical-related-button" id="correlation-focus">Localizar en el atlas 3D: '+escapeHtml(found.label)+'</button>'
+   : '<p class="muted correlation-note">Esta estructura no tiene una malla coincidente verificada en el atlas actual. La ficha se presenta como referencia científica y no se inventa una localización.</p>';
+  const refs=item.refs.map(([label,url])=>'<li><a href="'+escapeHtml(url)+'" target="_blank" rel="noopener noreferrer">'+escapeHtml(label)+' ↗</a></li>').join('');
+  detail.innerHTML='<p class="network-tag">'+escapeHtml(item.domain)+'</p><h4>'+escapeHtml(item.name)+'</h4><div class="clinical-actions">'+atlasAction+'</div>'+[['Funciones neurocognitivas',item.functions],['Manifestaciones clínicas posibles',item.signs],['Evaluación neuropsicológica',item.tests],['Neuroimagen pertinente',item.imaging],['Contextos clínicos',item.clinical],['Límites de interpretación',item.caveat]].map(([heading,value])=>'<section class="network-section"><h5>'+heading+'</h5><p class="muted">'+escapeHtml(value)+'</p></section>').join('')+'<section class="network-section"><h5>Fuentes y lecturas</h5><ul class="fact-references">'+refs+'</ul></section><p class="correlation-note muted">Las pruebas nombradas son ejemplos de instrumentos y dominios de evaluación. La selección, administración, corrección e interpretación requieren formación profesional, normas apropiadas y consideración de licencias. No se incluyen baremos ni puntos de corte.</p>';
+  const focus=detail.querySelector('#correlation-focus');
+  if(focus)focus.addEventListener('click',()=>{
+   controls.autoRotate=false;selectStructure(found);searchInput.value=found.label;renderSearch(found.label);
+   detail.querySelector('.correlation-note')?.scrollIntoView?.({block:'nearest'});
+  });
+ }
+ show(correlations[0],host.querySelector('button'));
 }
 
 function renderLayerControls(){
