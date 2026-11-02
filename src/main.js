@@ -5,7 +5,7 @@ import { DRACOLoader } from 'three/addons/loaders/DRACOLoader.js';
 import './style.css';
 import { findStructureFact } from './structure-facts.js';
 import { networks } from './networks.js';
-import { tracts } from './tracts.js';
+import { tracts } from './tracts.js';\nimport { modalities } from './neuroimaging.js';
 
 const MODEL_URL='https://raw.githubusercontent.com/itayinbarr/brainproject/2929e94f521a8ddceab26bc100a98dc06b0da060/brain-atlas/models/brain.glb';
 const MANIFEST_URL='https://raw.githubusercontent.com/itayinbarr/brainproject/2929e94f521a8ddceab26bc100a98dc06b0da060/brain-atlas/models/manifest.json';
@@ -98,7 +98,7 @@ function registerModel(gltf){
  renderSearch('');
  renderLayerControls();
  renderNetworkExplorer();
- renderTractExplorer();
+ renderTractExplorer();\n renderNeuroimagingExplorer();
 }
 
 function applyVisibility(mesh){const catOn=layerEnabled.get(mesh.userData.atlasCategory)!==false;const side=mesh.userData.atlasSide;const sideOn=activeHemisphere==='both'||side==='median'||side===activeHemisphere;mesh.visible=catOn&&sideOn;}
@@ -179,6 +179,23 @@ function renderTractExplorer(){
   detail.innerHTML='<p class="network-tag">'+escapeHtml(tract.type)+'</p><h4>'+escapeHtml(tract.name)+'</h4>'+[['Origen',tract.origin],['Trayecto anatómico',tract.course],['Terminaciones y conexiones',tract.termination],['Funciones asociadas',tract.function],['Relevancia clínica',tract.clinical],['Evaluación por neuroimagen',tract.imaging],['Límites de interpretación',tract.caveat]].map(([h,p])=>'<section class="network-section"><h5>'+h+'</h5><p class="muted">'+escapeHtml(p)+'</p></section>').join('')+'<section class="network-section"><h5>Bibliografía</h5><ul class="fact-references">'+refs+'</ul></section>';
  }
  show(tracts[0],host.querySelector('button'));
+}
+
+function renderNeuroimagingExplorer(){
+ const host=document.querySelector('#modality-list'),detail=document.querySelector('#modality-detail');
+ if(!host||!detail)return;
+ host.innerHTML='';
+ modalities.forEach((modality,index)=>{
+  const b=document.createElement('button');b.type='button';b.className='network-choice'+(index===0?' active':'');
+  b.innerHTML='<strong>'+escapeHtml(modality.name)+'</strong><small>'+escapeHtml(modality.group)+' · '+escapeHtml(modality.tag)+'</small>';
+  b.addEventListener('click',()=>show(modality,b));host.appendChild(b);
+ });
+ function show(modality,button){
+  host.querySelectorAll('button').forEach(b=>b.classList.toggle('active',b===button));
+  const refs=modality.links.map(([label,url])=>'<li><a href="'+escapeHtml(url)+'" target="_blank" rel="noopener noreferrer">'+escapeHtml(label)+' ↗</a></li>').join('');
+  detail.innerHTML='<p class="network-tag">'+escapeHtml(modality.group)+' · '+escapeHtml(modality.tag)+'</p><h4>'+escapeHtml(modality.name)+'</h4>'+[['Qué mide',modality.measures],['Principio de adquisición',modality.principle],['Aplicaciones',modality.uses],['Lectura clínica contextual',modality.clinical],['Límites y precauciones',modality.limits]].map(([h,p])=>'<section class="network-section"><h5>'+h+'</h5><p class="muted">'+escapeHtml(p)+'</p></section>').join('')+'<section class="network-section"><h5>Bibliografía y recursos</h5><ul class="fact-references">'+refs+'</ul></section>';
+ }
+ show(modalities[0],host.querySelector('button'));
 }
 
 function renderLayerControls(){
