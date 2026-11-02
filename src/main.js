@@ -13,6 +13,7 @@ import { correlations } from './clinical-correlation.js';
 import { neuropsychTests } from './neuropsych-tests.js';
 import { researchLab } from './research-lab.js';
 import { microTopics } from './microanatomy.js';
+import { cognitiveDomains } from './cognitive-domains.js';
 
 const MODEL_URL='https://raw.githubusercontent.com/itayinbarr/brainproject/2929e94f521a8ddceab26bc100a98dc06b0da060/brain-atlas/models/brain.glb';
 const MANIFEST_URL='https://raw.githubusercontent.com/itayinbarr/brainproject/2929e94f521a8ddceab26bc100a98dc06b0da060/brain-atlas/models/manifest.json';
@@ -112,6 +113,7 @@ function registerModel(gltf){
  renderAssessmentExplorer();
  renderResearchLab();
  renderMicroExplorer();
+ renderCognitiveDomainExplorer();
 }
 
 function applyVisibility(mesh){const catOn=layerEnabled.get(mesh.userData.atlasCategory)!==false;const side=mesh.userData.atlasSide;const sideOn=activeHemisphere==='both'||side==='median'||side===activeHemisphere;mesh.visible=catOn&&sideOn;}
@@ -338,6 +340,38 @@ function renderMicroExplorer(){
   detail.innerHTML='<p class="network-tag">'+escapeHtml(topic.group)+'</p><h4>'+escapeHtml(topic.name)+'</h4><p class="muted">'+escapeHtml(topic.summary)+'</p>'+[['Organización y mecanismo',topic.details],['Relevancia clínica',topic.clinical],['Límites de interpretación',topic.caveat]].map(([heading,value])=>'<section class="network-section"><h5>'+heading+'</h5><p class="muted">'+escapeHtml(value)+'</p></section>').join('')+'<section class="network-section"><h5>Fuentes y lecturas</h5><ul class="fact-references">'+refs+'</ul></section>';
  }
  show(microTopics[0],host.querySelector('button'));
+}
+
+
+function renderCognitiveDomainExplorer(){
+ const host=document.querySelector('#cognitive-domain-list'),detail=document.querySelector('#cognitive-domain-detail');
+ if(!host||!detail)return;
+ host.innerHTML='';
+ cognitiveDomains.forEach((domain,index)=>{
+  const b=document.createElement('button');b.type='button';b.className='network-choice'+(index===0?' active':'');
+  b.innerHTML='<strong>'+escapeHtml(domain.name)+'</strong><small>'+escapeHtml(domain.network)+'</small>';
+  b.addEventListener('click',()=>show(domain,b));host.appendChild(b);
+ });
+ function show(domain,button){
+  host.querySelectorAll('button').forEach(b=>b.classList.toggle('active',b===button));
+  const tests=domain.tests.map(id=>neuropsychTests.find(t=>t.id===id)).filter(Boolean);
+  const testLinks=tests.map(t=>'<button type="button" class="clinical-related-button" data-test-id="'+escapeHtml(t.id)+'">'+escapeHtml(t.name)+'</button>').join('');
+  const correlationsList=domain.correlations.map(id=>correlations.find(c=>c.id===id)).filter(Boolean);
+  const correlationLinks=correlationsList.map(c=>'<button type="button" class="clinical-related-button" data-correlation-id="'+escapeHtml(c.id)+'">'+escapeHtml(c.name)+'</button>').join('');
+  const refs=domain.refs.map(([label,url])=>'<li><a href="'+escapeHtml(url)+'" target="_blank" rel="noopener noreferrer">'+escapeHtml(label)+' ↗</a></li>').join('');
+  detail.innerHTML='<p class="network-tag">DOMINIO COGNITIVO</p><h4>'+escapeHtml(domain.name)+'</h4><p class="muted">'+escapeHtml(domain.definition)+'</p>'+[['Componentes a explorar',domain.components],['Estructuras implicadas',domain.structures.join(' · ')],['Redes funcionales',domain.network],['Manifestaciones y contextos clínicos',domain.clinical],['Consideraciones para la interpretación',domain.interpretation]].map(([heading,value])=>'<section class="network-section"><h5>'+heading+'</h5><p class="muted">'+escapeHtml(value)+'</p></section>').join('')+'<section class="network-section"><h5>Instrumentos relacionados</h5><div class="clinical-actions">'+(testLinks||'<p class="muted">Sin instrumentos vinculados en este catálogo.</p>')+'</div></section><section class="network-section"><h5>Correlaciones anatomoclínicas</h5><div class="clinical-actions">'+(correlationLinks||'<p class="muted">Sin fichas anatómicas vinculadas.</p>')+'</div></section><section class="network-section"><h5>Fuentes y lecturas</h5><ul class="fact-references">'+refs+'</ul></section><p class="correlation-note muted">El dominio no se localiza en una única región. Las tareas reclutan componentes parcialmente superpuestos y su desempeño está modulado por edad, educación, idioma, estado clínico y condiciones sensoriales/motoras.</p>';
+  detail.querySelectorAll('[data-test-id]').forEach(b=>b.addEventListener('click',()=>{
+   const test=neuropsychTests.find(t=>t.id===b.dataset.testId);const input=document.querySelector('#assessment-search');
+   if(input){input.value=test?.name||'';input.dispatchEvent(new Event('input',{bubbles:true}));}
+   document.querySelector('#assessment-detail')?.scrollIntoView({behavior:'smooth',block:'nearest'});
+  }));
+  detail.querySelectorAll('[data-correlation-id]').forEach(b=>b.addEventListener('click',()=>{
+   const item=correlations.find(c=>c.id===b.dataset.correlationId);
+   const target=[...document.querySelectorAll('#correlation-list button')].find(el=>el.textContent.includes(item?.name||''));
+   target?.click();document.querySelector('#correlation-detail')?.scrollIntoView({behavior:'smooth',block:'nearest'});
+  }));
+ }
+ show(cognitiveDomains[0],host.querySelector('button'));
 }
 
 function renderLayerControls(){
