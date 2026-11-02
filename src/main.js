@@ -18,6 +18,7 @@ import { neurochemicalSystems } from './neurochemistry.js';
 import { physiologyTopics } from './neurophysiology.js';
 import { simulationModels } from './simulations.js';
 import { clinicalPharmacology } from './clinical-pharmacology.js';
+import { parseCSV, normalizeResearchRows, summarizeResearch, pearson, pairwiseAuc, researchFields } from './research-analysis.js';
 
 const MODEL_URL='https://raw.githubusercontent.com/itayinbarr/brainproject/2929e94f521a8ddceab26bc100a98dc06b0da060/brain-atlas/models/brain.glb';
 const MANIFEST_URL='https://raw.githubusercontent.com/itayinbarr/brainproject/2929e94f521a8ddceab26bc100a98dc06b0da060/brain-atlas/models/manifest.json';
@@ -116,6 +117,7 @@ function registerModel(gltf){
  renderCorrelationExplorer();
  renderAssessmentExplorer();
  renderResearchLab();
+ renderResearchDataTool();
  renderMicroExplorer();
  renderCognitiveDomainExplorer();
  renderNeurochemistryExplorer();
@@ -330,6 +332,46 @@ function renderResearchLab(){
  const pipeline=researchLab.pipeline.map(v=>'<article class="research-item"><strong>'+escapeHtml(v.step)+'</strong><p class="muted">'+escapeHtml(v.detail)+'</p></article>').join('');
  const analysis=researchLab.analysis.map(v=>'<article class="research-item"><strong>'+escapeHtml(v.name)+'</strong><p class="muted">'+escapeHtml(v.detail)+'</p></article>').join('');
  detail.innerHTML='<p class="network-tag">PROTOCOLO · MARCO REPRODUCIBLE</p><h4>'+escapeHtml(researchLab.title)+'</h4><p class="muted">'+escapeHtml(researchLab.subtitle)+'</p><section class="network-section"><h5>Pregunta de investigación</h5><p class="muted">'+escapeHtml(researchLab.question)+'</p></section><section class="network-section"><h5>Diseño</h5><p class="muted">'+escapeHtml(researchLab.design)+'</p></section><section class="network-section"><h5>Grupos de comparación</h5>'+groups+'</section><section class="network-section"><h5>Objetivos</h5>'+objectives+'</section><section class="network-section"><h5>Variables y definiciones operacionales</h5>'+variables+'</section><section class="network-section"><h5>Pipeline de análisis</h5>'+pipeline+'</section><section class="network-section"><h5>Estrategia estadística</h5>'+analysis+'</section><section class="network-section"><h5>Precauciones metodológicas y éticas</h5>'+list(researchLab.safeguards)+'</section><section class="network-section"><h5>Referencias iniciales</h5><ul class="fact-references">'+refs+'</ul></section><p class="correlation-note muted">Antes del análisis confirmatorio: cerrar protocolo, definir variable primaria, cálculo muestral, criterios de exclusión, manejo de datos faltantes y plan de validación. No se han cargado resultados empíricos.</p>';
+}
+
+
+function renderResearchDataTool(){
+ const fileInput=document.querySelector('#research-csv-file'),status=document.querySelector('#research-data-status'),results=document.querySelector('#research-data-results');
+ if(!fileInput||!status||!results)return;
+ fileInput.addEventListener('change',()=>{
+  const file=fileInput.files?.[0];if(!file)return;
+  if(file.size>10*1024*1024){status.textContent='El archivo supera 10 MB. Exportá una versión más pequeña.';return;}
+  const reader=new FileReader();
+  status.textContent='Leyendo archivo local…';results.innerHTML='';
+  reader.onload=()=>{
+   try{
+    const raw=parseCSV(String(reader.result||''));
+    const normalized=normalizeResearchRows(raw);
+    if(normalized.missing.length){status.textContent='No se encontró la columna obligatoria group/grupo. Revisá los encabezados.';return;}
+    const rows=normalized.rows;
+    if(!rows.length){status.textContent='No hay filas válidas con grupo asignado.';return;}
+    const {groups,summaries}=summarizeResearch(rows);
+    const nMissing=raw.length-rows.length;
+    const columns=researchFields.filter(([key])=>normalized.mapping[key]);
+    const tableHead='<tr><th>Grupo</th><th>n</th>'+columns.map(([,label])=>'<th>'+escapeHtml(label)+'</th>').join('')+'</tr>';
+    const tableBody=summaries.map(g=>'<tr><td>'+escapeHtml(g.group)+'</td><td>'+g.n+'</td>'+columns.map(([key])=>{const v=g.values.find(x=>x.key===key);return '<td>'+ (v?.mean===null||v?.mean===undefined?'—':v.mean.toFixed(2)+(v.sd===null?'':' ± '+v.sd.toFixed(2))+'<small> n='+v.n+'</small>')+'</td>';}).join('')+'</tr>').join('');
+    const metrics=columns.filter(([key])=>!['age','education'].includes(key));
+    let aucHtml='';
+    if(groups.length===2&&metrics.length){
+     const [a,b]=groups;
+     aucHtml='<h5>Discriminación exploratoria (AUC)</h5><p class="muted">Grupo de referencia: '+escapeHtml(a)+'; grupo positivo: '+escapeHtml(b)+'. AUC por rangos, sin intervalos de confianza ni validación externa. Valores cercanos a 0,5 indican discriminación limitada; la orientación depende del orden de los grupos.</p><div class="research-table-wrap"><table><thead><tr><th>Variable</th><th>AUC</th><th>n '+escapeHtml(a)+'</th><th>n '+escapeHtml(b)+'</th></tr></thead><tbody>'+metrics.map(([key,label])=>{const x=pairwiseAuc(rows,key,a,b);return '<tr><td>'+escapeHtml(label)+'</td><td>'+(x.auc===null?'—':x.auc.toFixed(3))+'</td><td>'+x.nA+'</td><td>'+x.nB+'</td></tr>';}).join('')+'</tbody></table></div>';
+    }else if(groups.length>2){aucHtml='<p class="muted">Hay más de dos grupos: el cálculo ROC/AUC se reserva para comparaciones binarias preespecificadas. No se seleccionan automáticamente pares favorables.</p>';}
+    const corrPairs=[['total_words','age','Producción total × edad'],['total_words','education','Producción total × educación'],['mean_log_frequency','education','Frecuencia léxica × educación'],['mean_semantic_similarity','education','Similitud semántica × educación'],['first_latency','total_words','Latencia inicial × producción']];
+    const corrResults=corrPairs.filter(([a,b])=>normalized.mapping[a]&&normalized.mapping[b]).map(([a,b,label])=>{const x=pearson(rows.map(r=>r[a]),rows.map(r=>r[b]));return '<tr><td>'+label+'</td><td>'+(x.r===null?'—':x.r.toFixed(3))+'</td><td>'+x.n+'</td></tr>';}).join('');
+    const correlationHtml=corrResults?'<h5>Correlaciones de Pearson exploratorias</h5><p class="muted">Asociaciones bivariadas sin ajuste por covariables; no implican causalidad.</p><div class="research-table-wrap"><table><thead><tr><th>Variables</th><th>r</th><th>n</th></tr></thead><tbody>'+corrResults+'</tbody></table></div>':'';
+    const mappingHtml=Object.entries(normalized.mapping).map(([k,v])=>escapeHtml(k)+' ← '+escapeHtml(v)).join(' · ');
+    results.innerHTML='<div class="research-result-block"><h5>Resumen descriptivo por grupo</h5><p class="muted">Media ± desviación estándar; el n de cada variable puede variar por datos faltantes.</p><div class="research-table-wrap"><table><thead>'+tableHead+'</thead><tbody>'+tableBody+'</tbody></table></div>'+aucHtml+correlationHtml+'<p class="sim-caveat">Lectura responsable: resultados exploratorios, no inferenciales. No se calculan p-valores, tamaños de efecto ajustados, intervalos de confianza ni puntos de corte clínicos. Para análisis confirmatorios se requiere plan estadístico, control de supuestos, corrección por multiplicidad y validación.</p></div>';
+    status.textContent='Archivo procesado localmente: '+rows.length+' participantes en '+groups.length+' grupos; '+nMissing+' filas sin grupo excluidas. Mapeo: '+mappingHtml+'.';
+   }catch(error){console.error(error);status.textContent='No se pudo procesar el CSV. Verificá delimitador, comillas y encabezados.';}
+  };
+  reader.onerror=()=>{status.textContent='Error al leer el archivo local.';};
+  reader.readAsText(file);
+ });
 }
 
 
