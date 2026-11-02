@@ -74,7 +74,7 @@ export function pairwiseAuc(rows,field,groupA,groupB){
  const a=rows.filter(r=>r.group===groupA&&Number.isFinite(r[field])).map(r=>r[field]);
  const b=rows.filter(r=>r.group===groupB&&Number.isFinite(r[field])).map(r=>r[field]);
  if(!a.length||!b.length)return {nA:a.length,nB:b.length,auc:null};
- let wins=0,ties=0;for(const x of a)for(const y of b){if(x>y)wins++;else if(x===y)ties++;}
+ let wins=0,ties=0;for(const x of a)for(const y of b){if(y>x)wins++;else if(x===y)ties++;}
  return {nA:a.length,nB:b.length,auc:(wins+.5*ties)/(a.length*b.length)};
 }
 
