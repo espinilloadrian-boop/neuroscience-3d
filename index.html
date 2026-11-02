@@ -13,8 +13,10 @@
         <a class="brand" href="#" aria-label="Neuroscience 3D inicio"><span class="brand-mark">N³</span><span><strong>NEUROSCIENCE</strong><small>3D · ATLAS INTERACTIVO</small></span></a>
         <div class="top-meta"><span class="live-dot"></span> ATLAS INTERACTIVO · FASE 1 <span class="version">v0.2</span></div>
       </header>
+      <nav class="atlas-nav" aria-label="Navegación del atlas"><a href="#brain-top">Cerebro 3D</a><a href="#network-anchor">Redes</a><a href="#clinical-anchor">Clínica</a><a href="#assessment-anchor">Evaluación</a><a href="#research-anchor">Investigación</a><a href="#neurophysiology-anchor">Neurociencia</a></nav>
+      <a class="back-to-brain" href="#brain-top" aria-label="Volver al cerebro 3D">↑ <span>Cerebro 3D</span></a>
       <main class="workspace">
-        <section class="viewer-panel">
+        <section class="viewer-panel" id="brain-top">
           <div class="viewer-heading"><div><p class="eyebrow">EXPLORADOR ANATÓMICO</p><h1>Encéfalo humano</h1></div><span class="orientation">VISTA 3D · INTERACTIVA</span></div>
           <div id="scene-wrap"><div id="scene"></div><div class="scene-hint">Arrastrá para rotar <i>·</i> Rueda para zoom <i>·</i> Clic para seleccionar</div><div class="model-credit" id="model-credit">MODELO ANATÓMICO EXTERNO · CARGA PENDIENTE</div><div class="axis-label axis-a">ANTERIOR</div><div class="axis-label axis-p">POSTERIOR</div><div class="loading" id="loading">Construyendo modelo 3D…</div></div>
           <div class="section-controls" aria-label="Planos de corte"><span class="section-label">SECCIÓN</span><button class="section-button active" data-plane="none">Completo</button><button class="section-button" data-plane="axial">Axial</button><button class="section-button" data-plane="coronal">Coronal</button><button class="section-button" data-plane="sagittal">Sagital</button><input id="section-position" type="range" min="-1.8" max="1.8" step="0.05" value="0" aria-label="Posición del plano de corte" disabled /></div>
@@ -27,7 +29,7 @@
           <p class="eyebrow">BUSCAR ESTRUCTURA</p><input id="structure-search" class="structure-search" type="search" placeholder="Ej.: hipocampo, tálamo, giro angular…" autocomplete="off" /><div id="search-results" class="search-results" aria-live="polite"></div>
           <details class="layer-panel" open><summary>SISTEMAS ANATÓMICOS</summary><div id="layer-controls" class="layer-controls"><span class="search-empty">Cargando sistemas…</span></div></details>
           <div class="panel-divider"></div>
-          <section class="network-explorer">
+          <section class="network-explorer" id="network-anchor">
             <p class="eyebrow">CONECTIVIDAD FUNCIONAL</p>
             <h3 class="network-heading">Explorador de redes</h3>
             <div id="network-list" class="network-list" aria-label="Seleccionar circuito cerebral"></div>
@@ -42,7 +44,7 @@
             <div id="modality-detail" class="network-detail" aria-live="polite"><p class="muted">Seleccioná una modalidad para consultar su principio físico, aplicaciones y limitaciones.</p></div>
           </section>
           <div class="panel-divider"></div>
-          <section class="clinical-case-explorer">
+          <section class="clinical-case-explorer" id="clinical-anchor">
             <p class="eyebrow">INTEGRACIÓN CLÍNICA · IMAGEN, REDES Y COGNICIÓN</p>
             <h3 class="network-heading">Escenarios clínicos</h3>
             <p class="muted">Explorá cómo se relacionan los hallazgos de neuroimagen con anatomía, redes y perfiles neurocognitivos. Material educativo; no sustituye evaluación clínica.</p>
@@ -66,7 +68,7 @@
             <div id="cognitive-domain-detail" class="network-detail" aria-live="polite"><p class="muted">Seleccioná un dominio para explorar sus componentes y vínculos.</p></div>
           </section>
           <div class="panel-divider"></div>
-          <section class="assessment-explorer">
+          <section class="assessment-explorer" id="assessment-anchor">
             <p class="eyebrow">NEUROPSICOLOGÍA · PSICOMETRÍA CLÍNICA</p>
             <h3 class="network-heading">Explorador de instrumentos</h3>
             <p class="muted">Consultá dominios, constructos, usos, interpretación, disponibilidad de normas y límites de instrumentos habituales. No incluye reactivos ni protocolos protegidos.</p>
@@ -75,7 +77,7 @@
             <div id="assessment-detail" class="network-detail" aria-live="polite"><p class="muted">Seleccioná un instrumento para consultar su ficha.</p></div>
           </section>
           <div class="panel-divider"></div>
-          <section class="research-explorer">
+          <section class="research-explorer" id="research-anchor">
             <p class="eyebrow">INVESTIGACIÓN · MÉTODOS Y REPRODUCIBILIDAD</p>
             <h3 class="network-heading">Laboratorio de investigación</h3>
             <p class="muted">Diseño, variables, pipeline y análisis para el estudio de fluencia verbal semántica. Marco metodológico; no contiene datos ni resultados de participantes.</p>
@@ -106,7 +108,7 @@
             <div id="simulation-detail" class="network-detail" aria-live="polite"></div>
           </section>
           <div class="panel-divider"></div>
-          <section class="neurophysiology-explorer">
+          <section class="neurophysiology-explorer" id="neurophysiology-anchor">
             <p class="eyebrow">NEUROFISIOLOGÍA · BIOELECTRICIDAD · DINÁMICA DE REDES</p>
             <h3 class="network-heading">Laboratorio de neurofisiología</h3>
             <p class="muted">De los gradientes iónicos y la señal sináptica a las oscilaciones, EEG, sueño y acoplamiento neurovascular.</p>
