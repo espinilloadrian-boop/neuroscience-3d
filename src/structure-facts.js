@@ -27,7 +27,7 @@ export const structureFacts = [
     clinical: "Lesiones talámicas pueden producir síndromes sensitivos, alteraciones motoras, dolor central, trastornos de memoria o de conciencia, según territorio y lateralidad. La clínica depende del núcleo y de las conexiones comprometidas.",
     limitation: "No inferir un síndrome a partir de la etiqueta global 'tálamo': es imprescindible identificar el núcleo, territorio vascular, extensión y correlato clínico.",
     references: [
-      { label: "Torrico & Munakomi — Neuroanatomy, Thalamus (StatPearls, 2023)", url: "https://www.ncbi.nlm.nih.gov/books/NBK542184/" },
+      { label: "Torrico & Munakomi — Neuroanatomy, Thalamus (StatPearls, 2023)", url: "https://www.ncbi.nlm.nih.gov/books/NBK549908/" },
       { label: "Sheridan & Tadi — Neuroanatomy, Thalamic Nuclei (StatPearls)", url: "https://www.ncbi.nlm.nih.gov/books/NBK549908/" },
       { label: "The thalamus: Structure, function, and neurotherapeutics (2025)", url: "https://pmc.ncbi.nlm.nih.gov/articles/PMC12014413/" }
     ]
