@@ -16,6 +16,7 @@ import { microTopics } from './microanatomy.js';
 import { cognitiveDomains } from './cognitive-domains.js';
 import { neurochemicalSystems } from './neurochemistry.js';
 import { physiologyTopics } from './neurophysiology.js';
+import { simulationModels } from './simulations.js';
 
 const MODEL_URL='https://raw.githubusercontent.com/itayinbarr/brainproject/2929e94f521a8ddceab26bc100a98dc06b0da060/brain-atlas/models/brain.glb';
 const MANIFEST_URL='https://raw.githubusercontent.com/itayinbarr/brainproject/2929e94f521a8ddceab26bc100a98dc06b0da060/brain-atlas/models/manifest.json';
@@ -118,6 +119,7 @@ function registerModel(gltf){
  renderCognitiveDomainExplorer();
  renderNeurochemistryExplorer();
  renderNeurophysiologyExplorer();
+ renderSimulationExplorer();
 }
 
 function applyVisibility(mesh){const catOn=layerEnabled.get(mesh.userData.atlasCategory)!==false;const side=mesh.userData.atlasSide;const sideOn=activeHemisphere==='both'||side==='median'||side===activeHemisphere;mesh.visible=catOn&&sideOn;}
@@ -413,6 +415,50 @@ function renderNeurophysiologyExplorer(){
   detail.innerHTML='<p class="network-tag">'+escapeHtml(topic.group)+'</p><h4>'+escapeHtml(topic.name)+'</h4><p class="muted">'+escapeHtml(topic.summary)+'</p>'+[['Mecanismo fisiológico',topic.mechanism],['Relevancia clínica',topic.clinical],['Límites de interpretación',topic.limit]].map(([heading,value])=>'<section class="network-section"><h5>'+heading+'</h5><p class="muted">'+escapeHtml(value)+'</p></section>').join('')+'<section class="network-section"><h5>Fuentes y lecturas</h5><ul class="fact-references">'+refs+'</ul></section>';
  }
  show(physiologyTopics[0],host.querySelector('button'));
+}
+
+
+function renderSimulationExplorer(){
+ const tabs=document.querySelector('#simulation-tabs'),detail=document.querySelector('#simulation-detail');if(!tabs||!detail)return;
+ const labels={actionPotential:'Potencial de acción',receptor:'Receptores',plasticity:'Plasticidad'};
+ let active='actionPotential';
+ function draw(){
+  const model=simulationModels[active];tabs.innerHTML='';
+  Object.keys(simulationModels).forEach(key=>{const b=document.createElement('button');b.type='button';b.className='network-choice'+(key===active?' active':'');b.innerHTML='<strong>'+labels[key]+'</strong>';b.addEventListener('click',()=>{active=key;draw();});tabs.appendChild(b);});
+  const controls=model.controls.map(c=>'<label class="sim-control"><span>'+c.label+' <b data-value="'+c.id+'">'+c.value.toFixed(c.step<1?2:0)+'</b> <small>'+c.unit+'</small></span><input type="range" data-param="'+c.id+'" min="'+c.min+'" max="'+c.max+'" step="'+c.step+'" value="'+c.value+'"></label>').join('');
+  detail.innerHTML='<h4>'+model.title+'</h4><p class="muted">'+model.description+'</p><div class="sim-controls">'+controls+'</div><div id="simulation-visual" class="simulation-visual" role="img" aria-label="Gráfico esquemático del modelo"></div><div id="simulation-result" class="sim-result" aria-live="polite"></div><p class="sim-caveat">Modelo educativo simplificado. No sustituye registros electrofisiológicos, modelos computacionales validados ni evaluación clínica.</p>';
+  detail.querySelectorAll('input[data-param]').forEach(input=>input.addEventListener('input',()=>{detail.querySelector('[data-value="'+input.dataset.param+'"]').textContent=Number(input.value).toFixed(Number(input.step)<1?2:0);update();}));
+  update();
+ }
+ function svgGraph(points,yMin,yMax){
+  const width=560,height=190,left=34,right=12,top=12,bottom=25;
+  const xy=points.map((p,i)=>[(left+i*(width-left-right)/(points.length-1)).toFixed(1),(top+(yMax-p)*(height-top-bottom)/(yMax-yMin)).toFixed(1)]);
+  const path=xy.map((p,i)=>(i?'L':'M')+p.join(',')).join(' ');
+  return '<svg viewBox="0 0 '+width+' '+height+'" role="img" aria-label="Curva del modelo"><path d="M'+left+' '+top+'V'+(height-bottom)+'H'+(width-right)+'" fill="none" stroke="#60758f" stroke-width="1"/><path d="'+path+'" fill="none" stroke="#69b9e8" stroke-width="2.5" stroke-linejoin="round"/><text x="'+left+'" y="'+(height-6)+'" fill="#91a4bc" font-size="10">Tiempo / parámetro</text><text x="4" y="13" fill="#91a4bc" font-size="9">Respuesta</text></svg>';
+ }
+ function update(){
+  const val=id=>Number(detail.querySelector('[data-param="'+id+'"]').value);
+  let points=[],result='';
+  if(active==='actionPotential'){
+   const current=val('current'),threshold=val('threshold'),refractory=val('refractory'),fires=current>=threshold?Math.max(1,Math.floor(18/refractory)):0;
+   for(let t=0;t<=100;t++){let v=-70;if(fires){for(let k=0;k<fires;k++){const center=12+k*refractory*4;const d=Math.abs(t-center);if(d<2)v=-70+100*(1-d/2);else if(d<5)v=-70-12*(1-(d-2)/3);}}points.push(v);}
+   result=current>=threshold?'La entrada supera el umbral del modelo: se generan '+fires+' eventos de disparo esquemáticos.':'La entrada no alcanza el umbral: no se genera un potencial de acción en este modelo.';
+   detail.querySelector('#simulation-visual').innerHTML=svgGraph(points,-90,40);
+  }else if(active==='receptor'){
+   const c=val('concentration'),kd=val('kd'),eff=val('efficacy'),occupancy=c/(c+kd),response=occupancy*eff;
+   for(let x=0;x<=10;x+=.1)points.push((x/(x+kd))*eff*100);
+   result='Ocupación estimada: '+(occupancy*100).toFixed(1)+'% · Respuesta relativa del modelo: '+(response*100).toFixed(1)+'%. La ocupación depende de concentración y Kd; la respuesta incorpora la eficacia elegida.';
+   detail.querySelector('#simulation-visual').innerHTML=svgGraph(points,0,100);
+  }else{
+   const ca=val('calcium'),duration=val('duration'),prior=val('prior'),signal=ca*Math.sqrt(duration)*(prior===0?.85:prior===2?1.15:1);
+   for(let x=0;x<=10;x+=.1)points.push(Math.max(-100,Math.min(100,(x-5)*20)));
+   let label=signal<9?'Tendencia esquemática hacia LTD':signal>20?'Tendencia esquemática hacia LTP':'Sin cambio persistente claro en la zona intermedia';
+   result=label+'. Índice ilustrativo de señal integrada: '+signal.toFixed(1)+' u.a. No representa umbrales biológicos universales.';
+   detail.querySelector('#simulation-visual').innerHTML=svgGraph(points,-100,100);
+  }
+  detail.querySelector('#simulation-result').textContent=result;
+ }
+ draw();
 }
 
 function renderLayerControls(){
