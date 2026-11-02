@@ -80,7 +80,7 @@ const buttons=[...document.querySelectorAll('[data-region]')];
 function selectRegion(id){
  const d=data[id]; if(!d)return;
  selected=id;
- pickables.forEach(m=>{const active=m.userData.region===id;m.material.emissive.setHex(active?0x263d58:0x000000);m.material.emissiveIntensity=active?.7:0;});
+ pickables.forEach(m=>{const active=m.userData.region===id;m.material.emissive.setHex(active?0x263d58:0x000000);m.material.emissiveIntensity=active ? 0.7 : 0;});
  buttons.forEach(b=>b.classList.toggle('selected',b.dataset.region===id));
  info.innerHTML=`<div class="region-kicker">${d.system}</div><h2>${d.name}</h2><p class="muted">${d.description}</p><div class="panel-divider"></div><p class="eyebrow">FUNCIONES RELACIONADAS</p><ul class="function-list">${d.functions.map(x=>`<li>${x}</li>`).join('')}</ul><div class="anatomy-note"><strong>Organización y límites</strong><p>${d.note}</p></div>`;
 }
