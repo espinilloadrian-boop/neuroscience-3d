@@ -18,6 +18,7 @@ import { neurochemicalSystems } from './neurochemistry.js';
 import { physiologyTopics } from './neurophysiology.js';
 import { simulationModels } from './simulations.js';
 import { clinicalPharmacology } from './clinical-pharmacology.js';
+import { validateMappedRows } from './research-validation.js';
 import { parseCSV, normalizeResearchRows, summarizeResearch, pearson, pairwiseAuc, bootstrapAuc, standardizedMeanDifference, spearman, kruskalWallis, dunnPostHoc, researchFields } from './research-analysis.js';
 
 const MODEL_URL='https://raw.githubusercontent.com/itayinbarr/brainproject/2929e94f521a8ddceab26bc100a98dc06b0da060/brain-atlas/models/brain.glb';
@@ -366,15 +367,14 @@ function renderResearchProjects(){
      submitEvent.preventDefault();const data=new FormData(submitEvent.currentTarget),mapping={};
      variables.forEach((v,i)=>{const h=String(data.get('map-'+i)||'');if(h)mapping[v.name]=h;});
      const mapped=Object.entries(mapping);if(!mapped.length){report.innerHTML='<p class="sim-caveat">Asociá al menos una columna antes de validar.</p>';return;}
-     const idVariable=variables.find(v=>/identificador/i.test(v.role)||/^(id|participant_id|codigo|código)$/i.test(v.name));
-     const idHeader=idVariable?mapping[idVariable.name]:null,ids=new Map();
-     let emptyCells=0;const perVariable={};
-     for(const v of variables){const h=mapping[v.name];if(!h)continue;let missing=0;for(const row of raw)if(String(row[h]??'').trim()===''){missing++;emptyCells++;}perVariable[v.name]={header:h,missing,complete:raw.length-missing};}
-     if(idHeader)for(const row of raw){const id=String(row[idHeader]??'').trim();if(id)ids.set(id,(ids.get(id)||0)+1);}
-     const duplicates=idHeader?[...ids].filter(([,n])=>n>1):[];
+     const validation=validateMappedRows(raw,variables,mapping);
+     const perVariable=validation.perVariable;
+     const completeness=Object.entries(perVariable).map(([name,v])=>'<tr><td>'+escapeHtml(name)+'</td><td>'+escapeHtml(v.header)+'</td><td>'+v.complete+'/'+raw.length+'</td><td>'+v.missing+'</td><td>'+v.invalidType+'</td><td>'+v.invalidAllowed+'</td></tr>').join('');
+     const duplicateIdText=validation.hasIdentifier?validation.duplicateIds.length+' identificadores duplicados detectados.':'No se asoció una variable identificadora; no se pueden detectar duplicados de participantes.';
+     const invalidDetails=Object.entries(perVariable).flatMap(([name,v])=>v.invalidSamples.map(x=>'<li>'+escapeHtml(name)+' · fila '+x.row+' · «'+escapeHtml(x.value)+'»: '+escapeHtml(x.reason)+'</li>'));
      const mappedRows=raw.slice(0,5).map(row=>'<tr>'+mapped.map(([name,header])=>'<td>'+escapeHtml(String(row[header]??''))+'</td>').join('')+'</tr>').join('');
      const completeness=Object.entries(perVariable).map(([name,v])=>'<tr><td>'+escapeHtml(name)+'</td><td>'+escapeHtml(v.header)+'</td><td>'+v.complete+'/'+raw.length+'</td><td>'+v.missing+'</td></tr>').join('');
-     report.innerHTML='<div class="research-csv-report"><h5>Informe de validación preliminar</h5><p class="muted">'+raw.length+' filas · '+mapped.length+' variables asociadas · '+emptyCells+' celdas vacías en variables mapeadas.</p><div class="research-table-wrap"><table><thead><tr><th>Variable</th><th>Columna CSV</th><th>Completos</th><th>Vacíos</th></tr></thead><tbody>'+completeness+'</tbody></table></div>'+(idHeader?'<p class="sim-caveat">'+duplicates.length+' identificadores duplicados detectados.</p>':'<p class="sim-caveat">No se asoció una variable identificadora; no se pueden detectar duplicados de participantes.</p>')+'<h5>Vista previa · primeras cinco filas</h5><div class="research-table-wrap"><table><thead><tr>'+mapped.map(([name])=>'<th>'+escapeHtml(name)+'</th>').join('')+'</tr></thead><tbody>'+mappedRows+'</tbody></table></div><p class="sim-caveat">Validación estructural solamente. No se ejecutaron pruebas estadísticas ni se guardaron los datos. Revisá codificación, rangos, unidades, independencia de observaciones y valores imposibles antes del análisis.</p></div>';
+     report.innerHTML='<div class="research-csv-report"><h5>Informe de validación preliminar</h5><p class="muted">'+raw.length+' filas · '+mapped.length+' variables asociadas · '+validation.emptyCells+' celdas vacías · '+validation.invalidCells+' valores incompatibles con el diccionario · '+validation.duplicateRows+' filas repetidas en las variables asociadas.</p><div class="research-table-wrap"><table><thead><tr><th>Variable</th><th>Columna CSV</th><th>Completos</th><th>Vacíos</th><th>Tipo inválido</th><th>Código inválido</th></tr></thead><tbody>'+completeness+'</tbody></table></div><p class="sim-caveat">'+duplicateIdText+'</p>'+(invalidDetails.length?'<h5>Ejemplos de inconsistencias</h5><ul>'+invalidDetails.join('')+'</ul>':'<p class="muted">No se detectaron incompatibilidades de tipo ni de códigos permitidos en las variables asociadas.</p>')+'<h5>Vista previa · primeras cinco filas</h5><div class="research-table-wrap"><table><thead><tr>'+mapped.map(([name])=>'<th>'+escapeHtml(name)+'</th>').join('')+'</tr></thead><tbody>'+mappedRows+'</tbody></table></div><p class="sim-caveat">La validación es estructural. No corrige ni elimina datos, no imputa faltantes y no ejecuta pruebas estadísticas. Los rangos clínicos o plausibles deben definirse en el protocolo. Revisá independencia de observaciones y reglas de depuración antes del análisis.</p></div>';
     });
    }catch(error){report.innerHTML='<p class="sim-caveat">'+escapeHtml(error.message)+'</p>';}
    event.currentTarget.value='';
