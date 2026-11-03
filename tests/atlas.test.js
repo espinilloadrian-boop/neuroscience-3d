@@ -1,6 +1,10 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { clinicalCases } from '../src/clinical-cases.js';
+import { clinicalCaseLinks } from '../src/clinical-case-links.js';
+import { networks } from '../src/networks.js';
+import { cognitiveDomains } from '../src/cognitive-domains.js';
+import { correlations } from '../src/clinical-correlation.js';
 import { neuropsychTests } from '../src/neuropsych-tests.js';
 import { tracts } from '../src/tracts.js';
 import { findAnatomyIntegration } from '../src/anatomy-integration.js';
@@ -80,4 +84,32 @@ test('los descriptivos por grupo y métricas básicas producen resultados cohere
     { group: 'Control', score: 1 }, { group: 'Control', score: 2 },
     { group: 'EA', score: 3 }, { group: 'EA', score: 4 }
   ], 'score', 'Control', 'EA').auc, 1);
+});
+
+
+test('cada escenario clínico está conectado a estructuras, redes y tractos existentes', () => {
+  const networkIds = new Set(networks.map(item => item.id));
+  const tractIds = new Set(tracts.map(item => item.id));
+  for (const clinicalCase of clinicalCases) {
+    const links = clinicalCaseLinks[clinicalCase.id];
+    assert.ok(links, `Escenario sin conexiones: ${clinicalCase.id}`);
+    assert.ok(links.structures.length > 0, `Sin estructuras: ${clinicalCase.id}`);
+    assert.ok(networkIds.has(links.networkId), `Red inexistente: ${clinicalCase.id}`);
+    assert.ok(tractIds.has(links.tractId), `Tracto inexistente: ${clinicalCase.id}`);
+    for (const structure of links.structures) {
+      assert.ok(structure.label && structure.aliases.length > 0);
+    }
+  }
+});
+
+test('los dominios cognitivos solo enlazan instrumentos y correlaciones existentes', () => {
+  const testIds = new Set(neuropsychTests.map(item => item.id));
+  const correlationIds = new Set(correlations.map(item => item.id));
+  assert.ok(cognitiveDomains.length >= 8);
+  for (const domain of cognitiveDomains) {
+    assert.ok(domain.name && domain.definition && domain.network && domain.interpretation);
+    for (const id of domain.tests) assert.ok(testIds.has(id), `Instrumento inexistente en ${domain.id}: ${id}`);
+    for (const id of domain.correlations) assert.ok(correlationIds.has(id), `Correlación inexistente en ${domain.id}: ${id}`);
+    assert.ok(domain.refs.every(([label, url]) => label && url.startsWith('https://')));
+  }
 });
