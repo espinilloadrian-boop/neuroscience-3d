@@ -267,6 +267,8 @@ const networkNodeAliases={
  "cerebelo":["cerebellum"],
  "corteza somatosensorial":["postcentral gyrus","primary somatosensory cortex"],
  "corteza visual":["calcarine sulcus","cuneus","lateral occipital gyrus"],
+ "corteza occipital":["calcarine sulcus","cuneus","lateral occipital gyrus"],
+ "corteza temporal":["superior temporal gyrus","middle temporal gyrus","inferior temporal gyrus"],
  "corteza auditiva":["transverse temporal gyrus","superior temporal gyrus"],
  "campos oculares frontales":["frontal eye field"],
  "corteza parahipocampal":["medial occipitotemporal gyrus (parahippocampal)","parahippocampal gyrus"],
