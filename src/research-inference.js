@@ -57,3 +57,21 @@ export function compareIndependentMultipleGroups(rows,{groupField,outcomeField}=
  const excluded=rows.filter(r=>labels.includes(String(r[groupField]))&&!Number.isFinite(r[outcomeField])).length;
  return {...welchAnova(groups),excludedMissingOrInvalid:excluded};
 }
+
+function gammaQ(a,x){if(x<0||a<=0)return NaN;if(x===0)return 1;const gln=logGamma(a),eps=3e-14;if(x<a+1){let ap=a,sum=1/a,del=sum;for(let n=1;n<=1000;n++){ap++;del*=x/ap;sum+=del;if(Math.abs(del)<Math.abs(sum)*eps)break;}return Math.max(0,Math.min(1,1-sum*Math.exp(-x+a*Math.log(x)-gln)));}let b=x+1-a,c=1/1e-300,d=1/b,h=d;for(let i=1;i<=1000;i++){const an=-i*(i-a);b+=2;d=an*d+b;if(Math.abs(d)<1e-300)d=1e-300;c=b+an/c;if(Math.abs(c)<1e-300)c=1e-300;d=1/d;const del=d*c;h*=del;if(Math.abs(del-1)<eps)break;}return Math.max(0,Math.min(1,Math.exp(-x+a*Math.log(x)-gln)*h));}
+function logChoose(n,k){if(k<0||k>n)return -Infinity;return logGamma(n+1)-logGamma(k+1)-logGamma(n-k+1);}
+function hypergeomProbability(a,row1,col1,total){return Math.exp(logChoose(col1,a)+logChoose(total-col1,row1-a)-logChoose(total,row1));}
+function fisherExactTwoSided(a,b,c,d){const row1=a+b,col1=a+c,total=a+b+c+d,lo=Math.max(0,row1-(total-col1)),hi=Math.min(row1,col1),observed=hypergeomProbability(a,row1,col1,total);let p=0;for(let x=lo;x<=hi;x++){const prob=hypergeomProbability(x,row1,col1,total);if(prob<=observed+1e-12)p+=prob;}return Math.min(1,p);}
+export function compareCategoricalGroups(rows,{groupField,outcomeField}={}){
+ if(!groupField||!outcomeField)return {valid:false,reason:'Seleccioná una variable de grupo y un resultado categórico.'};
+ const groups=[...new Set(rows.map(r=>r[groupField]).filter(v=>v!==null&&v!==undefined&&String(v).trim()!==''))].map(String).sort((a,b)=>a.localeCompare(b,'es'));
+ const categories=[...new Set(rows.map(r=>r[outcomeField]).filter(v=>v!==null&&v!==undefined&&String(v).trim()!==''))].map(String).sort((a,b)=>a.localeCompare(b,'es'));
+ if(groups.length<2||categories.length<2)return {valid:false,reason:'Se necesitan al menos dos grupos y dos categorías observadas.'};
+ const table=groups.map(g=>categories.map(o=>rows.filter(r=>String(r[groupField])===g&&String(r[outcomeField])===o).length));
+ const rowTotals=table.map(r=>r.reduce((a,b)=>a+b,0)),colTotals=categories.map((_,j)=>table.reduce((s,r)=>s+r[j],0)),n=rowTotals.reduce((a,b)=>a+b,0);
+ const expected=table.map((r,i)=>r.map((_,j)=>rowTotals[i]*colTotals[j]/n)),minimumExpected=Math.min(...expected.flat()),excluded=rows.length-n;
+ if(groups.length===2&&categories.length===2&&minimumExpected<5){const [a,b]=table[0],[c,d]=table[1];return {valid:true,method:'Prueba exacta de Fisher bilateral',groups,categories,table,rowTotals,colTotals,n,excluded,minimumExpected,p:fisherExactTwoSided(a,b,c,d),statistic:null,df:null,expected};}
+ if(minimumExpected<5)return {valid:false,reason:'Hay frecuencias esperadas menores que 5 en una tabla mayor que 2×2. Esta versión no aplica una aproximación chi-cuadrado ni una prueba exacta RxC; se requiere un método exacto o Monte Carlo apropiado.',groups,categories,table,expected,minimumExpected,n,excluded};
+ const statistic=table.reduce((s,row,i)=>s+row.reduce((v,obs,j)=>v+(obs-expected[i][j])**2/expected[i][j],0),0),df=(groups.length-1)*(categories.length-1),p=gammaQ(df/2,statistic/2);
+ return {valid:true,method:'Chi-cuadrado de Pearson',groups,categories,table,rowTotals,colTotals,n,excluded,expected,minimumExpected,statistic,df,p};
+}
