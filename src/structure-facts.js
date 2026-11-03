@@ -17,7 +17,7 @@ export const structureFacts = [
     ]
   },
   {
-    match: ["thalamus", "tálamo", "talamo"],
+    match: ["thalamus", "tálamo"],
     title: "Tálamo",
     location: "Diencéfalo, a ambos lados del tercer ventrículo, superior al mesencéfalo y medial a la cápsula interna.",
     boundaries: "Conjunto bilateral de núcleos separados parcialmente por láminas medulares. Se reconocen grupos anterior, medial, lateral, intralaminar, de línea media y reticular; la organización funcional depende del núcleo.",
