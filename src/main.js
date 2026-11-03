@@ -60,7 +60,7 @@ floorGrid.position.y=-1.9;floorGrid.material.transparent=true;floorGrid.material
 const categoryNames={cortex:'Corteza cerebral',white_matter:'Sustancia blanca',deep_grey:'Núcleos grises profundos',diencephalon:'Diencéfalo',brainstem:'Tronco encefálico',cerebellum:'Cerebelo',ventricles:'Sistema ventricular',arteries:'Arterias',veins_sinuses:'Venas y senos venosos',cranial_nerves:'Nervios craneales',meninges_dura:'Meninges',tracts:'Tractos de sustancia blanca'};
 const categoryColors={cortex:0xb5a4d8,white_matter:0xd6c6a4,deep_grey:0x9a83bd,diencephalon:0x7ea9c9,brainstem:0x9e9cae,cerebellum:0xc28fbd,ventricles:0x65b7c4,arteries:0xd77878,veins_sinuses:0x779ad1,cranial_nerves:0xd6b36f,meninges_dura:0x9a9b9e,tracts:0x75b6a5};
 let manifestById=new Map();
-const meshes=[];const structures=new Map();const layerEnabled=new Map();let selectedId=null;let labelsOn=true;let activePlane='none';let activeHemisphere='both';
+const meshes=[];const structures=new Map();const layerEnabled=new Map();let selectedId=null;let isolateSelected=false;let labelsOn=true;let activePlane='none';let activeHemisphere='both';
 const info=document.querySelector('#structure-info');
 const loading=document.querySelector('#loading');
 const credit=document.querySelector('#model-credit');
@@ -179,7 +179,7 @@ function registerModel(gltf){
  renderClinicalPharmacology();
 }
 
-function applyVisibility(mesh){const catOn=layerEnabled.get(mesh.userData.atlasCategory)!==false;const side=mesh.userData.atlasSide;const sideOn=activeHemisphere==='both'||side==='median'||side===activeHemisphere;mesh.visible=catOn&&sideOn;}
+function applyVisibility(mesh){const catOn=layerEnabled.get(mesh.userData.atlasCategory)!==false;const side=mesh.userData.atlasSide;const sideOn=activeHemisphere==='both'||side==='median'||side===activeHemisphere;const meshId=String(mesh.userData.atlasId??(mesh.userData.atlasLabel+'|'+mesh.userData.atlasSide+'|'+mesh.userData.atlasCategory));const selectionOn=!isolateSelected||!selectedId||meshId===selectedId;mesh.visible=catOn&&sideOn&&selectionOn;}
 function focusStructure(s){
  const bounds=new THREE.Box3();
  s.meshes.forEach(mesh=>bounds.expandByObject(mesh));
@@ -201,6 +201,7 @@ function selectStructure(s){
  if(!s)return;
  if(layerEnabled.get(s.category)===false){layerEnabled.set(s.category,true);meshes.filter(m=>m.userData.atlasCategory===s.category).forEach(applyVisibility);renderLayerControls();}
  selectedId=s.id;
+ if(isolateSelected)meshes.forEach(applyVisibility);
  focusStructure(s);
  meshes.forEach(m=>{
   const active=String(m.userData.atlasId??(m.userData.atlasLabel+'|'+m.userData.atlasSide+'|'+m.userData.atlasCategory))===s.id;
@@ -785,7 +786,9 @@ buttons.forEach(b=>b.addEventListener('click',()=>{
  if(found){controls.autoRotate=false;selectStructure(found);searchInput.value=found.label;renderSearch(found.label);}
 }));
 searchInput?.addEventListener('input',e=>renderSearch(e.target.value));
-document.querySelector('#reset-view').addEventListener('click',()=>{camera.position.set(0,1.1,8.5);controls.target.set(0,0,0);controls.autoRotate=true;controls.update();});
+document.querySelector('#reset-view').addEventListener('click',()=>{isolateSelected=false;const isolateButton=document.querySelector('#isolate-structure');isolateButton?.classList.remove('active');isolateButton?.setAttribute('aria-pressed','false');meshes.forEach(applyVisibility);camera.position.set(0,1.1,8.5);controls.target.set(0,0,0);controls.autoRotate=true;controls.update();});
+const isolateButton=document.querySelector('#isolate-structure');
+isolateButton?.addEventListener('click',()=>{if(!selectedId)return;isolateSelected=!isolateSelected;isolateButton.classList.toggle('active',isolateSelected);isolateButton.setAttribute('aria-pressed',String(isolateSelected));meshes.forEach(applyVisibility);});
 document.querySelector('#toggle-labels').addEventListener('click',e=>{labelsOn=!labelsOn;e.currentTarget.classList.toggle('active',labelsOn);floorGrid.visible=labelsOn;sectionGuide.visible=labelsOn&&activePlane!=='none';});
 document.querySelector('#hemisphere-select')?.addEventListener('change',e=>{activeHemisphere=e.target.value;meshes.forEach(applyVisibility);});
 const sectionButtons=[...document.querySelectorAll('[data-plane]')];
