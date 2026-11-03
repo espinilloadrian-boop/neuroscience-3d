@@ -19,3 +19,11 @@ El ajuste de Holm controla el error familiar de las comparaciones por pares. Los
 - Las observaciones faltantes o no numéricas se excluyen del cálculo y se contabilizan.
 
 Los cálculos se realizan localmente en el navegador. No cargar identificadores directos ni datos clínicos identificables.
+
+## Resultados categóricos
+Para diseños transversales con grupos independientes y un resultado nominal u ordinal, se construye una tabla de contingencia.
+- Chi-cuadrado de Pearson: se calcula solo cuando todas las frecuencias esperadas son al menos 5.
+- Tablas 2×2 con alguna frecuencia esperada menor que 5: prueba exacta de Fisher bilateral.
+- Tablas mayores que 2×2 con frecuencias esperadas pequeñas: el programa se abstiene de calcular un p-valor. Se necesita un método exacto RxC o Monte Carlo validado, que aún no está implementado.
+
+Se informan tabla observada, totales, frecuencias esperadas mínimas, método, estadístico/grados de libertad cuando corresponde, valor p y observaciones excluidas. La prueba evalúa asociación, no causalidad. Requiere observaciones independientes y categorías mutuamente excluyentes. No calcula medidas de asociación (OR/RR/V de Cramér), no ajusta covariables y no resuelve datos pareados o longitudinales.
