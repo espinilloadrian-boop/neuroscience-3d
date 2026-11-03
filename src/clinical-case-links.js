@@ -50,4 +50,37 @@ export const clinicalCaseLinks = {
   networkId:"frontostriatal",
   tractId:"slf"
  }
+
+,
+ vci: {
+  structures:[
+   {label:"Cápsula interna",aliases:["internal capsule","cápsula interna"]},
+   {label:"Tálamo",aliases:["thalamus","tálamo"]},
+   {label:"Corteza prefrontal",aliases:["prefrontal cortex","corteza prefrontal"]},
+   {label:"Cuerpo calloso",aliases:["corpus callosum","cuerpo calloso"]}
+  ],
+  networkId:"thalamocortical",
+  tractId:"internal-capsule"
+ },
+ bvftd: {
+  structures:[
+   {label:"Corteza prefrontal",aliases:["prefrontal cortex","corteza prefrontal"]},
+   {label:"Amígdala",aliases:["amygdala","amygdaloid complex","amígdala"]},
+   {label:"Corteza temporal",aliases:["superior temporal gyrus","middle temporal gyrus","temporal cortex"]},
+   {label:"Ínsula",aliases:["insula","ínsula"]}
+  ],
+  networkId:"salience",
+  tractId:"uncinate"
+ },
+ "pd-cognition": {
+  structures:[
+   {label:"Núcleo caudado",aliases:["caudate nucleus","caudate"]},
+   {label:"Putamen",aliases:["putamen"]},
+   {label:"Globo pálido",aliases:["globus pallidus internal","globus pallidus external","globus pallidus"]},
+   {label:"Tálamo",aliases:["thalamus","tálamo"]},
+   {label:"Corteza prefrontal",aliases:["prefrontal cortex","middle frontal gyrus","superior frontal gyrus"]}
+  ],
+  networkId:"frontostriatal",
+  tractId:"internal-capsule"
+}
 };
