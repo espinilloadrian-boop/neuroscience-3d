@@ -754,6 +754,12 @@ function renderLayerControls(){
  const host=document.querySelector('#layer-controls');if(!host)return;
  const counts=new Map();structures.forEach(s=>counts.set(s.category,(counts.get(s.category)||0)+1));
  host.innerHTML='';
+ const bulk=document.createElement('div');bulk.className='layer-bulk-actions';
+ const showAll=document.createElement('button');showAll.type='button';showAll.textContent='Mostrar todos';
+ const hideAll=document.createElement('button');hideAll.type='button';hideAll.textContent='Ocultar todos';
+ showAll.addEventListener('click',()=>{counts.forEach((_,cat)=>layerEnabled.set(cat,true));meshes.forEach(applyVisibility);renderLayerControls();});
+ hideAll.addEventListener('click',()=>{counts.forEach((_,cat)=>layerEnabled.set(cat,false));meshes.forEach(applyVisibility);renderLayerControls();});
+ bulk.append(showAll,hideAll);host.appendChild(bulk);
  [...counts.entries()].sort((a,b)=>(categoryNames[a[0]]||a[0]).localeCompare(categoryNames[b[0]]||b[0],'es')).forEach(([cat,count])=>{
   if(!layerEnabled.has(cat))layerEnabled.set(cat,true);
   const label=document.createElement('label');label.className='layer-toggle';
