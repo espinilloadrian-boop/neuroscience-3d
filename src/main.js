@@ -903,13 +903,55 @@ const draco=new DRACOLoader();draco.setDecoderPath(DRACO_URL);
 const loader=new GLTFLoader();loader.setDRACOLoader(draco);
 const manifestController=new AbortController();
 const manifestTimeout=setTimeout(()=>manifestController.abort(),8000);
-fetch(MANIFEST_URL,{signal:manifestController.signal}).then(response=>{if(!response.ok)throw new Error('Manifest HTTP '+response.status);return response.json();}).then(manifest=>{manifestById=new Map((manifest.nodes||[]).map(node=>[String(node.id),node]));loading.textContent='Metadatos cargados. Descargando geometría 3D…';}).catch(err=>{console.warn('No se pudo cargar el manifiesto anatómico en 8 segundos; se continuará con los metadatos incluidos en el GLB:',err);}).finally(()=>{clearTimeout(manifestTimeout);
- let modelSettled=false;
- const timeout=setTimeout(()=>{if(modelSettled)return;modelSettled=true;console.warn('Tiempo de espera agotado para CDN primaria; se intenta fuente alternativa.');loading.textContent='La descarga tarda más de lo esperado; probando otra fuente…';loadFallback();},18000);
- const loadFallback=()=>{
-  let fallbackSettled=false;
-  const fallbackTimeout=setTimeout(()=>{if(fallbackSettled)return;fallbackSettled=true;showError('Las dos fuentes del modelo anatómico superaron el tiempo de espera. Se activó una representación 3D local simplificada.');},18000);
-  loader.load(MODEL_FALLBACK_URL,gltf=>{if(fallbackSettled)return;fallbackSettled=true;clearTimeout(fallbackTimeout);if(modelSettled&&brain.children.length)return;modelSettled=true;clearTimeout(timeout);registerModel(gltf);},progress=>{if(progress.total)loading.textContent='Reintentando modelo anatómico… '+Math.round(progress.loaded/progress.total*100)+'%';},err=>{if(fallbackSettled)return;fallbackSettled=true;clearTimeout(fallbackTimeout);console.error('Fallaron las dos fuentes del modelo anatómico:',err);modelSettled=true;clearTimeout(timeout);showError('No fue posible descargar el modelo anatómico externo. Se activó una representación 3D local simplificada.');});
- };
- loader.load(MODEL_URL,gltf=>{if(modelSettled)return;modelSettled=true;clearTimeout(timeout);registerModel(gltf);},progress=>{if(progress.total)loading.textContent='Cargando modelo anatómico… '+Math.round(progress.loaded/progress.total*100)+'%';},err=>{if(modelSettled)return;modelSettled=true;clearTimeout(timeout);console.warn('Falló CDN primaria; se intenta fuente alternativa:',err);loading.textContent='Reintentando desde el repositorio de origen…';loadFallback();});
-});
+const manifestPromise=fetch(MANIFEST_URL,{signal:manifestController.signal})
+ .then(response=>{if(!response.ok)throw new Error('Manifest HTTP '+response.status);return response.json();})
+ .then(manifest=>{manifestById=new Map((manifest.nodes||[]).map(node=>[String(node.id),node]));})
+ .catch(err=>{console.warn('No se pudo cargar el manifiesto anatómico; se continuará con los metadatos del GLB:',err);})
+ .finally(()=>clearTimeout(manifestTimeout));
+
+function downloadAtlasModel(url,onProgress){
+ return new Promise((resolve,reject)=>{
+  let settled=false;
+  const timeout=setTimeout(()=>{
+   if(settled)return;
+   settled=true;
+   reject(new Error('Tiempo de espera agotado al descargar el modelo.'));
+  },18000);
+  loader.load(url,gltf=>{
+   if(settled)return;
+   settled=true;
+   clearTimeout(timeout);
+   resolve(gltf);
+  },progress=>{
+   if(progress.total)onProgress?.(Math.round(progress.loaded/progress.total*100));
+  },error=>{
+   if(settled)return;
+   settled=true;
+   clearTimeout(timeout);
+   reject(error);
+  });
+ });
+}
+
+(async()=>{
+ try{
+  const [gltf]=await Promise.all([
+   downloadAtlasModel(MODEL_URL,percent=>{loading.textContent='Cargando modelo anatómico… '+percent+'%';}),
+   manifestPromise
+  ]);
+  registerModel(gltf);
+ }catch(primaryError){
+  console.warn('Falló la fuente principal del modelo; se intenta la alternativa:',primaryError);
+  loading.textContent='Reintentando desde el repositorio de origen…';
+  try{
+   const [gltf]=await Promise.all([
+    downloadAtlasModel(MODEL_FALLBACK_URL,percent=>{loading.textContent='Reintentando modelo anatómico… '+percent+'%';}),
+    manifestPromise
+   ]);
+   registerModel(gltf);
+  }catch(fallbackError){
+   console.error('Fallaron las dos fuentes del modelo anatómico:',fallbackError);
+   showError('No fue posible descargar el modelo anatómico externo. Se activó una representación 3D local simplificada.');
+  }
+ }
+})();
