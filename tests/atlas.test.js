@@ -9,6 +9,7 @@ import { correlations } from '../src/clinical-correlation.js';
 import { neuropsychTests } from '../src/neuropsych-tests.js';
 import { tracts } from '../src/tracts.js';
 import { findAnatomyIntegration } from '../src/anatomy-integration.js';
+import { findStructureFact } from '../src/structure-facts.js';
 import { researchLab } from '../src/research-lab.js';
 import { parseCSV, normalizeResearchRows, summarizeResearch, pearson, pairwiseAuc } from '../src/research-analysis.js';
 
@@ -123,4 +124,10 @@ test('cada escenario clínico tiene una guía de lectura multimodal completa', (
     assert.ok(steps.some(([heading]) => /no permite concluir/i.test(heading)));
     for (const [heading, detail] of steps) assert.ok(heading && detail);
   }
+});
+
+
+test('las fichas anatómicas reconocen nombres con y sin acentos', () => {
+  assert.equal(findStructureFact('tálamo')?.title, 'Tálamo');
+  assert.equal(findStructureFact('talamo')?.title, 'Tálamo');
 });
