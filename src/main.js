@@ -134,7 +134,7 @@ function registerModel(gltf){
   const ta2=meta.ta2||[];
   const color=new THREE.Color(categoryColors[cat]??0x9eacc1);
   const original=Array.isArray(o.material)?o.material[0]:o.material;
-  const mat=new THREE.MeshStandardMaterial({color,roughness:(cat==='arteries'||cat==='veins_sinuses') ? 0.48 : 0.78,metalness:0,side:cat==='meninges_dura'?THREE.DoubleSide:THREE.FrontSide});
+  const mat=new THREE.MeshStandardMaterial({color,roughness:(cat==='arteries'||cat==='veins_sinuses') ? 0.48 : 0.72,metalness:0,side:THREE.DoubleSide});
   mat.clippingPlanes=activePlane==='none'?[]:[sectionPlane];
   o.material=mat;
   o.userData={...ex,atlasId:id,atlasCategory:cat,atlasLabel:label,atlasSide:side,atlasRegion:region,baseColor:color.clone(),originalMaterial:original};
