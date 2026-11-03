@@ -20,6 +20,7 @@ import { simulationModels } from './simulations.js';
 import { clinicalPharmacology } from './clinical-pharmacology.js';
 import { validateMappedRows } from './research-validation.js';
 import { summarizeNumeric, summarizeCategorical, summarizeByGroup, buildAnalysisPlan } from './research-statistics.js';
+import { compareIndependentGroups } from './research-inference.js';
 import { parseCSV, normalizeResearchRows, summarizeResearch, pearson, pairwiseAuc, bootstrapAuc, standardizedMeanDifference, spearman, kruskalWallis, dunnPostHoc, researchFields } from './research-analysis.js';
 
 const MODEL_URL='https://raw.githubusercontent.com/itayinbarr/brainproject/2929e94f521a8ddceab26bc100a98dc06b0da060/brain-atlas/models/brain.glb';
@@ -400,7 +401,26 @@ function renderResearchProjects(){
       if(type==='continuous')html+='<div class="research-table-wrap"><table><tbody>'+[['Media',fmt(summary.mean)],['Desviación estándar',fmt(summary.sd)],['Mediana',fmt(summary.median)],['Q1',fmt(summary.q1)],['Q3',fmt(summary.q3)],['RIQ',fmt(summary.iqr)],['Mínimo',fmt(summary.min)],['Máximo',fmt(summary.max)]].map(([k,v])=>'<tr><th>'+k+'</th><td>'+v+'</td></tr>').join('')+'</tbody></table></div>';
       else html+='<div class="research-table-wrap"><table><thead><tr><th>Categoría</th><th>n</th><th>Proporción</th></tr></thead><tbody>'+summary.levels.map(x=>'<tr><td>'+escapeHtml(x.level)+'</td><td>'+x.count+'</td><td>'+fmt(x.proportion)+'</td></tr>').join('')+'</tbody></table></div>';
       if(group){const groupValues=raw.map(row=>String(row[mapping[group]]??'').trim()||null),rows=raw.map((row,i)=>({[group]:groupValues[i],[outcome]:values[i]})).filter(row=>row[group]!==null),byGroup=summarizeByGroup(rows,group,outcome,type);html+='<h5>Descriptivos por grupo: '+escapeHtml(group)+'</h5><div class="research-table-wrap"><table><thead><tr><th>Grupo</th><th>Filas</th><th>n válido</th><th>Faltantes</th><th>Resumen</th></tr></thead><tbody>'+byGroup.map(x=>'<tr><td>'+escapeHtml(x.group)+'</td><td>'+x.nRows+'</td><td>'+x.summary.n+'</td><td>'+x.summary.missing+'</td><td>'+(type==='continuous'?'Media '+fmt(x.summary.mean)+' ± '+fmt(x.summary.sd)+'; mediana '+fmt(x.summary.median)+'; RIQ '+fmt(x.summary.iqr):x.summary.levels.map(l=>escapeHtml(l.level)+': '+l.count+' ('+fmt(l.proportion)+')').join(' · '))+'</td></tr>').join('')+'</tbody></table></div>';}
-      html+='<p class="sim-caveat">'+plan.warnings.map(escapeHtml).join(' ')+' No se realizaron contrastes de hipótesis ni ajustes por covariables.</p>';output.innerHTML=html;
+      html+='<p class="sim-caveat">'+plan.warnings.map(escapeHtml).join(' ')+'</p>';output.innerHTML=html;
+      if(design==='independent-groups'&&group&&type==='continuous'){
+       const groupLevels=[...new Set(raw.map(row=>String(row[mapping[group]]??'').trim()).filter(Boolean))].sort((a,b)=>a.localeCompare(b,'es'));
+       if(groupLevels.length===2){
+        const choices=groupLevels.map(value=>'<option value="'+escapeHtml(value)+'">'+escapeHtml(value)+'</option>').join('');
+        output.insertAdjacentHTML('beforeend','<section class="network-section"><h5>Contraste inferencial · dos grupos independientes</h5><p class="muted">Prueba t de Welch bilateral para un resultado cuantitativo. Seleccioná el orden de comparación; el efecto se expresa como Grupo B menos Grupo A.</p><form id="research-welch-form" class="research-variable-form"><label>Grupo A<select name="groupA">'+choices+'</select></label><label>Grupo B<select name="groupB">'+choices+'</select></label><button type="submit" class="research-project-submit">Ejecutar t de Welch</button></form><div id="research-welch-output" aria-live="polite"></div></section>');
+        const welchForm=output.querySelector('#research-welch-form');
+        const groupASelect=welchForm.querySelector('[name="groupA"]'),groupBSelect=welchForm.querySelector('[name="groupB"]');
+        groupBSelect.selectedIndex=1;
+        welchForm.addEventListener('submit',testEvent=>{
+         testEvent.preventDefault();const a=groupASelect.value,b=groupBSelect.value,result=output.querySelector('#research-welch-output');
+         if(a===b){result.innerHTML='<p class="sim-caveat">Elegí dos grupos diferentes.</p>';return;}
+         const rows=raw.map(row=>{const rawValue=String(row[mapping[outcome]]??'').trim();const numeric=rawValue===''?null:Number(rawValue.replace(',','.'));return {[group]:String(row[mapping[group]]??'').trim(),[outcome]:Number.isFinite(numeric)?numeric:null};});
+         const test=compareIndependentGroups(rows,{groupField:group,outcomeField:outcome,groupA:a,groupB:b});
+         if(!test.valid){result.innerHTML='<p class="sim-caveat">'+escapeHtml(test.reason)+'</p>';return;}
+         const number=x=>Number(x).toFixed(3),p=test.p<.001?'<escape>p</escape> < .001':'p = '+number(test.p);
+         result.innerHTML='<div class="research-table-wrap"><table><tbody>'+[['n Grupo A',test.n1],['n Grupo B',test.n2],['Media A ± DE',number(test.meanA)+' ± '+number(test.sdA)],['Media B ± DE',number(test.meanB)+' ± '+number(test.sdB)],['Diferencia de medias (B − A)',number(test.difference)],['IC 95% de la diferencia','['+number(test.ci95[0])+', '+number(test.ci95[1])+']'],['t de Welch',number(test.t)],['Grados de libertad',number(test.df)],['Valor p bilateral',p],['g de Hedges',test.hedgesG===null?'No estimable':number(test.hedgesG)],['IC 95% aproximado de g',test.hedgesGCi95?'['+number(test.hedgesGCi95[0])+', '+number(test.hedgesGCi95[1])+']':'No estimable'],['Faltantes/no válidos excluidos',test.excludedMissingOrInvalid]].map(([label,value])=>'<tr><th>'+label+'</th><td>'+value+'</td></tr>').join('')+'</tbody></table></div><p class="sim-caveat">Welch no asume varianzas iguales. La inferencia requiere independencia entre participantes, muestreo/diseño adecuados y revisión de valores extremos y distribución. El IC de g es aproximado; no se ajustaron covariables ni multiplicidad. No utilizar este contraste con medidas repetidas, datos pareados o conglomerados.</p>';
+        });
+       }else if(groupLevels.length>2){output.insertAdjacentHTML('beforeend','<p class="sim-caveat">Se detectaron más de dos grupos. No se ejecuta una t por pares: corresponde implementar un contraste global para más de dos grupos y un procedimiento post hoc con control de multiplicidad.</p>');}
+      }else if(design==='paired'||design==='longitudinal'){output.insertAdjacentHTML('beforeend','<p class="sim-caveat">No se ejecutan pruebas para grupos independientes en diseños pareados o longitudinales. Se necesita un análisis específico que modele el emparejamiento o la dependencia intraindividual.</p>');}
      });
 
     });
