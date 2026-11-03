@@ -38,6 +38,7 @@ test('counts missing cells and identical mapped rows without modifying input',()
 });
 
 test('does not impose allowed values when dictionary field is blank',()=>{
- const unrestricted=variables.map(v=>v.name==='group'?{...v,values:''}:v);\n const result=validateMappedRows([{Age:'21',Group:'Otro',Date:'2026-01-01',ID:'X'}],unrestricted,mapping);
+ const unrestricted=variables.map(v=>v.name==='group'?{...v,values:''}:v);
+ const result=validateMappedRows([{Age:'21',Group:'Otro',Date:'2026-01-01',ID:'X'}],unrestricted,mapping);
  assert.equal(result.perVariable.group.invalidAllowed,0);
 });
