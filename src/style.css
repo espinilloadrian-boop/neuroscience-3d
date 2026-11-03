@@ -120,3 +120,22 @@ html{scroll-behavior:smooth;scroll-padding-top:76px}
 .research-protocol-field span{font-size:9px;color:#a9bdd5}
 .research-protocol-field textarea{width:100%;padding:9px;border:1px solid #344760;border-radius:5px;background:#0b1522;color:#e5edf8;font:10px/1.6 Manrope,sans-serif;resize:vertical}
 .research-protocol-field textarea:focus{outline:1px solid #79a5d9;border-color:#79a5d9}
+
+
+/* Diccionario de variables y portabilidad de proyectos */
+.research-project-actions{display:flex;flex-wrap:wrap;gap:7px;margin:12px 0}
+.research-import-label{display:inline-flex;align-items:center;cursor:pointer}
+.research-variable-dictionary{margin-top:16px;padding-top:14px;border-top:1px solid #293b52}
+.research-variable-dictionary>h5{margin:0 0 6px;color:#c7d9ee;font-size:11px}
+.research-variable-list{display:grid;gap:7px;margin:10px 0}
+.research-variable-row{display:flex;justify-content:space-between;align-items:flex-start;gap:10px;padding:10px;border:1px solid #293e58;border-radius:6px;background:#111e30}
+.research-variable-row strong{display:block;color:#dce8f7;font:10px 'DM Mono',monospace;overflow-wrap:anywhere}
+.research-variable-row small{display:block;color:#8ca4c2;font-size:8px;line-height:1.6;margin-top:4px}
+.research-variable-row p{margin:5px 0 0;color:#b7c5d8;font-size:9px;line-height:1.6}
+.research-variable-delete{flex:0 0 auto;border:1px solid #614b50;border-radius:4px;background:#251b25;color:#d9b9bf;padding:6px 8px;font-size:9px;cursor:pointer}
+.research-variable-delete:hover{background:#3a242b;border-color:#a66b79}
+.research-variable-form{display:grid;gap:8px;margin-top:12px;padding:11px;border:1px solid #293b52;border-radius:6px;background:#0b1522}
+.research-variable-form label{display:grid;gap:5px;color:#a9bdd5;font-size:9px}
+.research-variable-form input,.research-variable-form select,.research-variable-form textarea{width:100%;padding:8px;border:1px solid #344760;border-radius:5px;background:#101c2b;color:#e5edf8;font:10px Manrope,sans-serif}
+.research-variable-form textarea{resize:vertical}
+.research-variable-form input:focus,.research-variable-form select:focus,.research-variable-form textarea:focus{outline:1px solid #79a5d9;border-color:#79a5d9}
