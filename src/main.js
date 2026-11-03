@@ -233,6 +233,44 @@ function renderSearch(query){
  });
 }
 
+const networkNodeAliases={
+ "corteza prefrontal":["prefrontal cortex","middle frontal gyrus","superior frontal gyrus","orbital part of inferior frontal gyrus"],
+ "corteza prefrontal medial":["medial frontal gyrus","anterior cingulate gyrus"],
+ "corteza prefrontal dorsolateral":["middle frontal gyrus","superior frontal gyrus"],
+ "corteza prefrontal lateral":["middle frontal gyrus","superior frontal gyrus"],
+ "corteza frontal":["middle frontal gyrus","superior frontal gyrus"],
+ "corteza parietal posterior":["superior parietal lobule","inferior parietal lobule"],
+ "corteza parietal superior":["superior parietal lobule"],
+ "corteza parietal inferior":["inferior parietal lobule"],
+ "surco intraparietal":["intraparietal sulcus"],
+ "cíngulo anterior":["cingulate gyrus and sulcus (middle anterior part)"],
+ "cíngulo anterior dorsal":["cingulate gyrus and sulcus (middle anterior part)"],
+ "cíngulo posterior":["cingulate gyrus (posterior dorsal part)"],
+ "ínsula anterior":["insula (subcentral gyrus and ant. and post. sulci)"],
+ "ínsula":["insula (subcentral gyrus and ant. and post. sulci)"],
+ "precúneo":["precuneus"],
+ "hipocampo":["hippocampus"],
+ "globo pálido":["globus pallidus internal","globus pallidus external"],
+ "estriado":["caudate nucleus","putamen"],
+ "tálamo":["anterior nuclei of thalamus"],
+ "hipotálamo":["anterior hypothalamus","lateral hypothalamus","posterior hypothalamus","tuberal hypothalamus"],
+ "cerebelo":["cerebellum"],
+ "corteza somatosensorial":["postcentral gyrus"],
+ "corteza visual":["calcarine sulcus","cuneus"],
+ "corteza auditiva":["transverse temporal gyrus"],
+ "campos oculares frontales":["frontal eye field"],
+ "corteza parahipocampal":["medial occipitotemporal gyrus (parahippocampal)"]
+};
+function resolveNetworkNode(term){
+ const key=normalise(term);
+ const aliases=networkNodeAliases[key]||[];
+ const all=[...structures.values()];
+ const exact=all.filter(s=>normalise(s.label)===key);
+ const candidates=exact.length?exact:all.filter(s=>aliases.some(alias=>normalise(s.label)===normalise(alias)));
+ if(!candidates.length)return null;
+ const bilateral=candidates.filter(s=>s.side==='left'||s.side==='right');
+ return bilateral.length?bilateral[0]:candidates[0];
+}
 function renderNetworkExplorer(){
  const host=document.querySelector('#network-list');
  const detail=document.querySelector('#network-detail');
@@ -249,17 +287,18 @@ function renderNetworkExplorer(){
  function showNetwork(network,button){
   host.querySelectorAll('button').forEach(b=>b.classList.toggle('active',b===button));
   const refs=network.refs.map(([label,url])=>'<li><a href="'+escapeHtml(url)+'" target="_blank" rel="noopener noreferrer">'+escapeHtml(label)+' ↗</a></li>').join('');
-  const nodes=network.nodes.map(node=>'<button type="button" class="network-node" data-node="'+escapeHtml(node)+'">'+escapeHtml(node)+'</button>').join('');
-  detail.innerHTML='<p class="network-tag">'+escapeHtml(network.tag)+'</p><h4>'+escapeHtml(network.name)+'</h4><p class="muted">'+escapeHtml(network.summary)+'</p><section class="network-section"><h5>Cómo leer este circuito</h5><p class="muted">El recorrido es un esquema funcional basado en bibliografía, no una reconstrucción de conexiones individuales. Al seleccionar una estructura se enfoca su malla disponible en el atlas; no se dibuja ni se valida una conexión anatómica entre los nodos.</p></section><section class="network-section"><h5>Recorrido esquemático</h5><p class="muted">'+escapeHtml(network.route)+'</p></section><section class="network-section"><h5>Estructuras relacionadas</h5><div class="network-nodes">'+nodes+'</div></section><section class="network-section"><h5>Funciones</h5><p class="muted">'+escapeHtml(network.function)+'</p></section><section class="network-section"><h5>Correlatos clínicos</h5><p class="muted">'+escapeHtml(network.clinical)+'</p></section><section class="network-section"><h5>Alcance y límites</h5><p class="muted">'+escapeHtml(network.caveat)+'</p></section><section class="network-section"><h5>Bibliografía</h5><ul class="fact-references">'+refs+'</ul></section>';
-  detail.querySelectorAll('[data-node]').forEach(nodeButton=>nodeButton.addEventListener('click',()=>{
+  const nodes=network.nodes.map(node=>{
+   const found=resolveNetworkNode(node);
+   return '<button type="button" class="network-node" data-node="'+escapeHtml(node)+'" '+(found?'':'disabled aria-disabled="true"')+'>'+escapeHtml(node)+(found?'':' · sin malla específica')+'</button>';
+  }).join('');
+  detail.innerHTML='<p class="network-tag">'+escapeHtml(network.tag)+'</p><h4>'+escapeHtml(network.name)+'</h4><p class="muted">'+escapeHtml(network.summary)+'</p><section class="network-section"><h5>Cómo leer este circuito</h5><p class="muted">El recorrido es un esquema funcional basado en bibliografía, no una reconstrucción de conexiones individuales. Solo se habilitan nodos con una correspondencia anatómica suficientemente específica en el atlas; un nodo deshabilitado no cuenta con una malla independiente identificable.</p></section><section class="network-section"><h5>Recorrido esquemático</h5><p class="muted">'+escapeHtml(network.route)+'</p></section><section class="network-section"><h5>Estructuras relacionadas</h5><div class="network-nodes">'+nodes+'</div></section><section class="network-section"><h5>Funciones</h5><p class="muted">'+escapeHtml(network.function)+'</p></section><section class="network-section"><h5>Correlatos clínicos</h5><p class="muted">'+escapeHtml(network.clinical)+'</p></section><section class="network-section"><h5>Alcance y límites</h5><p class="muted">'+escapeHtml(network.caveat)+'</p></section><section class="network-section"><h5>Bibliografía</h5><ul class="fact-references">'+refs+'</ul></section>';
+  detail.querySelectorAll('[data-node]:not(:disabled)').forEach(nodeButton=>nodeButton.addEventListener('click',()=>{
    const term=nodeButton.dataset.node;
-   searchInput.value=term;renderSearch(term);
-   const found=[...structures.values()].find(s=>normalise(s.label+' '+s.region+' '+s.category+' '+s.ta2.join(' ')).includes(normalise(term)));
-   if(found){controls.autoRotate=false;selectStructure(found);}
+   const found=resolveNetworkNode(term);
+   if(found){searchInput.value=term;renderSearch(term);controls.autoRotate=false;selectStructure(found);}
   }));
  }
 }
-
 
 function renderTractExplorer(){
  const host=document.querySelector('#tract-list'),detail=document.querySelector('#tract-detail');
