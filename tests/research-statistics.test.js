@@ -1,0 +1,9 @@
+import test from 'node:test';
+import assert from 'node:assert/strict';
+import {summarizeNumeric,summarizeCategorical,summarizeByGroup,buildAnalysisPlan} from '../src/research-statistics.js';
+test('numeric summary reports valid n, missing, mean, sample SD and quartiles',()=>{const s=summarizeNumeric([1,2,3,4,null,NaN]);assert.equal(s.n,4);assert.equal(s.missing,2);assert.equal(s.mean,2.5);assert.ok(Math.abs(s.sd-Math.sqrt(5/3))<1e-12);assert.equal(s.median,2.5);assert.equal(s.iqr,1.5);assert.equal(s.min,1);assert.equal(s.max,4);});
+test('empty and singleton numeric summaries are explicit',()=>{assert.equal(summarizeNumeric([null]).mean,null);assert.equal(summarizeNumeric([7]).sd,null);});
+test('categorical summary preserves levels and denominators',()=>{const s=summarizeCategorical(['DCL','EA','DCL','',null]);assert.equal(s.n,3);assert.equal(s.missing,2);assert.deepEqual(s.levels.map(x=>[x.level,x.count]),[['DCL',2],['EA',1]]);assert.ok(Math.abs(s.levels[0].proportion-2/3)<1e-12);});
+test('group summaries report per-group valid and missing counts',()=>{const s=summarizeByGroup([{g:'A',x:1},{g:'A',x:null},{g:'B',x:4}],'g','x');assert.deepEqual(s.map(x=>[x.group,x.nRows,x.summary.n,x.summary.missing]),[['A',2,1,1],['B',1,1,0]]);});
+test('analysis plan flags missing outcomes and longitudinal ID',()=>{const vars=[{name:'score',type:'continuous'},{name:'age',type:'continuous'}];const p=buildAnalysisPlan({variables:vars,design:'longitudinal',outcome:'score',predictors:['age']});assert.equal(p.valid,false);assert.ok(p.errors.some(x=>x.includes('identificar al participante')));});
+test('valid cross-sectional plan recommends scale-appropriate description',()=>{const p=buildAnalysisPlan({variables:[{name:'diagnosis',type:'nominal'},{name:'age',type:'continuous'}],outcome:'diagnosis',predictors:['age'],group:'diagnosis'});assert.equal(p.valid,true);assert.ok(p.recommendations.some(x=>x.includes('frecuencias')));});
