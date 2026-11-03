@@ -113,3 +113,10 @@ html{scroll-behavior:smooth;scroll-padding-top:76px}
 .research-project-submit{justify-self:start;padding:9px 12px;border:1px solid #496987;border-radius:5px;background:#172b42;color:#dcecff;font-size:10px;cursor:pointer}
 .research-project-submit:hover{background:#203b59}
 #research-project-status{font-size:9px;margin-top:8px}
+
+.research-protocol-form{display:grid;gap:10px;margin-top:13px;padding-top:13px;border-top:1px solid #293b52}
+.research-protocol-form h5{margin:0 0 3px;color:#c7d9ee;font-size:11px}
+.research-protocol-field{display:grid;gap:5px}
+.research-protocol-field span{font-size:9px;color:#a9bdd5}
+.research-protocol-field textarea{width:100%;padding:9px;border:1px solid #344760;border-radius:5px;background:#0b1522;color:#e5edf8;font:10px/1.6 Manrope,sans-serif;resize:vertical}
+.research-protocol-field textarea:focus{outline:1px solid #79a5d9;border-color:#79a5d9}
