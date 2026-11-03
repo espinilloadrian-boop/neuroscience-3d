@@ -16,7 +16,7 @@ export function welchTTest(groupA,groupB){
  if(!Number.isFinite(se2)||se2<=0)return {valid:false,reason:'No se puede estimar el error estándar: variabilidad nula o datos insuficientes.',n1,n2};
  const df=se2*se2/((v1/n1)**2/(n1-1)+(v2/n2)**2/(n2-1));
  const se=Math.sqrt(se2),t=difference/se,p=Math.max(0,Math.min(1,2*(1-tCdf(Math.abs(t),df))));
- const critical=tQuantile(.975,df),ci:[number,number]=[difference-critical*se,difference+critical*se];
+ const critical=tQuantile(.975,df),ci=[difference-critical*se,difference+critical*se];
  const pooled=Math.sqrt(((n1-1)*v1+(n2-1)*v2)/(n1+n2-2));
  const d=pooled>0?difference/pooled:null,J=1-3/(4*(n1+n2-2)-1),g=d===null?null:J*d;
  const gSe=d===null?null:Math.sqrt((n1+n2)/(n1*n2)+d*d/(2*(n1+n2-2)))*J;
