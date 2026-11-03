@@ -152,8 +152,9 @@ function registerModel(gltf){
  // Box3 está expresado en coordenadas de mundo; la traslación debe escalarse
  // junto con la geometría para que el centro real del atlas quede en el origen.
  source.scale.setScalar(fitScale);
- source.position.set(-center.x*fitScale,-center.y*fitScale,-center.z*fitScale);
  source.rotation.y=Math.PI;
+ // Compensar también la rotación de 180° aplicada al atlas.
+ source.position.set(center.x*fitScale,-center.y*fitScale,center.z*fitScale);
  brain.add(source);
  const count=structures.size;
  loading.classList.add('hidden');
