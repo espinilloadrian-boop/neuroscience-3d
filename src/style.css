@@ -139,3 +139,12 @@ html{scroll-behavior:smooth;scroll-padding-top:76px}
 .research-variable-form input,.research-variable-form select,.research-variable-form textarea{width:100%;padding:8px;border:1px solid #344760;border-radius:5px;background:#101c2b;color:#e5edf8;font:10px Manrope,sans-serif}
 .research-variable-form textarea{resize:vertical}
 .research-variable-form input:focus,.research-variable-form select:focus,.research-variable-form textarea:focus{outline:1px solid #79a5d9;border-color:#79a5d9}
+
+
+/* Importador CSV por proyecto y reporte de calidad */
+.research-csv-project-upload{display:inline-flex;align-items:center;gap:8px;margin:10px 0;padding:9px 11px;border:1px solid #496987;border-radius:6px;color:#d9e9fa;font-size:10px;cursor:pointer}
+.research-csv-project-upload input{max-width:190px;font-size:9px;color:#9eb4cd}
+.research-csv-report{margin-top:12px;padding:11px;border:1px solid #30445e;border-radius:7px;background:#0b1522}
+.research-csv-report h5{font-size:10px;color:#c7d9ee;margin:10px 0 6px}
+.research-csv-report .research-table-wrap{max-height:300px;overflow:auto}
+.research-csv-report .sim-caveat{font-size:9px;line-height:1.65;color:#d1b99a;margin:9px 0}
