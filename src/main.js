@@ -326,24 +326,27 @@ function renderAssessmentExplorer(){
 function renderResearchProjects(){
  const host=document.querySelector('#research-project-manager');if(!host)return;
  const key='neuroscience3d.researchProjects.v1';
- const seed={id:'semantic-fluency-alzheimer',title:researchLab.title||'Fluencia verbal semántica y enfermedad de Alzheimer',area:'Neuropsicología · Demencias',question:researchLab.question||'¿Qué diferencias en la organización léxico-semántica distinguen a controles, DCL y enfermedad de Alzheimer?',status:'En desarrollo'};
+ const seed={id:'semantic-fluency-alzheimer',title:researchLab.title||'Fluencia verbal semántica y enfermedad de Alzheimer',area:'Neuropsicología · Demencias',question:researchLab.question||'¿Qué diferencias en la organización léxico-semántica distinguen a controles, DCL y enfermedad de Alzheimer?',status:'En desarrollo',protocol:{}};
  let projects=[seed],activeId=seed.id;
  try{const saved=JSON.parse(localStorage.getItem(key)||'null');if(Array.isArray(saved?.projects))projects=saved.projects;if(!projects.some(p=>p.id===seed.id))projects.unshift(seed);activeId=saved?.activeId||seed.id;}catch(error){}
  if(!projects.some(p=>p.id===activeId))activeId=seed.id;
  const list=host.querySelector('#research-project-list'),detail=host.querySelector('#research-project-detail'),form=host.querySelector('#research-project-form'),status=host.querySelector('#research-project-status');
- const persist=()=>{try{localStorage.setItem(key,JSON.stringify({projects,activeId}));}catch(error){status.textContent='No se pudo guardar en este navegador.';}};
+ const fields=[['design','Diseño del estudio','Ej.: observacional, transversal, casos y controles'],['sample','Población y muestra','Población objetivo, tamaño previsto y estrategia de muestreo'],['criteria','Criterios de inclusión y exclusión','Definí criterios antes de analizar los datos'],['variables','Variables y definiciones operacionales','Variable primaria, secundarias, predictoras y covariables'],['procedure','Procedimiento e instrumentos','Tareas, instrumentos, duración y condiciones de administración'],['analysis','Plan de análisis','Descriptivos, contrastes, modelos, ajuste por multiplicidad y validación'],['ethics','Ética y gestión de datos','Aprobación, consentimiento, anonimización, acceso y conservación'],['references','Bibliografía y fuentes','DOI, PMID, guías y referencias verificables']];
+ const persist=()=>{try{localStorage.setItem(key,JSON.stringify({projects,activeId}));}catch(error){status.textContent='No se pudo guardar: el almacenamiento local está lleno o bloqueado.';}};
  function render(){
   list.innerHTML=projects.map(p=>'<button type="button" class="research-project-card'+(p.id===activeId?' active':'')+'" data-project-id="'+escapeHtml(p.id)+'"><span class="research-project-card-top"><strong>'+escapeHtml(p.title)+'</strong><small>'+escapeHtml(p.status)+'</small></span><span class="research-project-area">'+escapeHtml(p.area)+'</span></button>').join('');
   list.querySelectorAll('[data-project-id]').forEach(b=>b.addEventListener('click',()=>{activeId=b.dataset.projectId;persist();render();}));
-  const p=projects.find(x=>x.id===activeId)||seed;
-  detail.innerHTML='<p class="network-tag">PROYECTO ACTIVO</p><h4>'+escapeHtml(p.title)+'</h4><p class="muted">'+escapeHtml(p.area)+'</p><section class="network-section"><h5>Pregunta de investigación</h5><p class="muted">'+escapeHtml(p.question||'Pendiente de definir.')+'</p></section><p class="research-project-footnote">Ficha guardada en este navegador. Cada proyecto tendrá su propio protocolo, datos y análisis; el analizador CSV actual sigue dedicado a fluencia semántica.</p>';
+  const p=projects.find(x=>x.id===activeId)||seed,protocol=p.protocol||{};
+  const inputs=fields.map(([name,label,placeholder])=>'<label class="research-protocol-field"><span>'+escapeHtml(label)+'</span><textarea name="'+name+'" rows="3" maxlength="5000" placeholder="'+escapeHtml(placeholder)+'">'+escapeHtml(protocol[name]||'')+'</textarea></label>').join('');
+  detail.innerHTML='<p class="network-tag">PROYECTO ACTIVO · PROTOCOLO</p><h4>'+escapeHtml(p.title)+'</h4><p class="muted">'+escapeHtml(p.area)+'</p><section class="network-section"><h5>Pregunta de investigación</h5><p class="muted">'+escapeHtml(p.question||'Pendiente de definir.')+'</p></section><form id="research-protocol-form" class="research-protocol-form"><h5>Protocolo científico del proyecto</h5>'+inputs+'<button type="submit" class="research-project-submit">Guardar protocolo</button></form><p class="research-project-footnote">El protocolo se guarda de forma independiente para cada proyecto en este navegador. Los datos de participantes no se cargan aquí. No guardes información identificable ni datos clínicos sensibles en esta ficha.</p>';
+  detail.querySelector('#research-protocol-form').addEventListener('submit',event=>{event.preventDefault();const data=new FormData(event.currentTarget);p.protocol={};for(const [name] of fields)p.protocol[name]=String(data.get(name)||'').trim();persist();status.textContent='Protocolo guardado para «'+p.title+'».';});
   status.textContent=projects.length+' proyecto'+(projects.length===1?'':'s')+' · guardado local en este navegador.';
  }
  form.addEventListener('submit',event=>{
   event.preventDefault();const data=new FormData(form),title=String(data.get('title')||'').trim(),area=String(data.get('area')||'').trim(),question=String(data.get('question')||'').trim();
   if(!title){status.textContent='Ingresá un título para crear el proyecto.';return;}
   const id='project-'+Date.now().toString(36)+'-'+Math.random().toString(36).slice(2,7);
-  projects.push({id,title,area:area||'Área por definir',question,status:'Idea / planificación'});activeId=id;persist();form.reset();render();
+  projects.push({id,title,area:area||'Área por definir',question,status:'Idea / planificación',protocol:{}});activeId=id;persist();form.reset();render();
  });
  render();
 }
