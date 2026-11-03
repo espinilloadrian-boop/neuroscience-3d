@@ -389,10 +389,11 @@ function renderCorrelationExplorer(){
  });
  function show(item,button){
   host.querySelectorAll('button').forEach(b=>b.classList.toggle('active',b===button));
-  const aliases=item.aliases.map(normalise);
+  const aliases=item.aliases.map(alias=>normalise(alias).trim()).filter(Boolean);
+  const matchesWholePhrase=(haystack,alias)=>(' '+haystack.replace(/[^a-z0-9]+/g,' ').trim()+' ').includes(' '+alias.replace(/[^a-z0-9]+/g,' ').trim()+' ');
   const found=[...structures.values()].find(s=>{
-   const haystack=normalise(s.label+' '+s.region+' '+s.ta2.join(' '));
-   return aliases.some(alias=>haystack.includes(alias));
+   const label=normalise(s.label),region=normalise(s.region),ta2=normalise(s.ta2.join(' '));
+   return aliases.some(alias=>matchesWholePhrase(label,alias)||matchesWholePhrase(region,alias)||matchesWholePhrase(ta2,alias));
   });
   const atlasAction=found
    ? '<button type="button" class="clinical-related-button" id="correlation-focus">Localizar en el atlas 3D: '+escapeHtml(found.label)+'</button>'
