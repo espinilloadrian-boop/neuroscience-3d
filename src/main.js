@@ -323,6 +323,13 @@ function renderNetworkExplorer(){
 
 function renderTractExplorer(){
  const host=document.querySelector('#tract-list'),detail=document.querySelector('#tract-detail');
+ const tractEndpoints={
+  "fornix":["hipocampo","hipotálamo"],"cingulum":["cíngulo anterior","cíngulo posterior","corteza parahipocampal"],
+  "internal-capsule":["tálamo","globo pálido","corteza motora primaria"],"arcuate":["corteza prefrontal","corteza parietal inferior"],
+  "slf":["corteza parietal superior","corteza prefrontal"],"uncinate":["amígdala","corteza prefrontal"],
+  "ifof":["corteza occipital","corteza prefrontal"],"ilf":["corteza visual","corteza parahipocampal"],
+  "corticospinal":["corteza motora primaria","tronco encefálico"],"optic-radiation":["tálamo","corteza visual"]
+ };
  if(!host||!detail)return;
  host.innerHTML='';
  tracts.forEach((tract,index)=>{
@@ -334,6 +341,19 @@ function renderTractExplorer(){
   host.querySelectorAll('button').forEach(b=>b.classList.toggle('active',b===button));
   const refs=tract.refs.map(([label,url])=>'<li><a href="'+escapeHtml(url)+'" target="_blank" rel="noopener noreferrer">'+escapeHtml(label)+' ↗</a></li>').join('');
   detail.innerHTML='<p class="network-tag">'+escapeHtml(tract.type)+'</p><h4>'+escapeHtml(tract.name)+'</h4>'+[['Origen',tract.origin],['Trayecto anatómico',tract.course],['Terminaciones y conexiones',tract.termination],['Funciones asociadas',tract.function],['Relevancia clínica',tract.clinical],['Evaluación por neuroimagen',tract.imaging],['Límites de interpretación',tract.caveat]].map(([h,p])=>'<section class="network-section"><h5>'+h+'</h5><p class="muted">'+escapeHtml(p)+'</p></section>').join('')+'<section class="network-section"><h5>Bibliografía</h5><ul class="fact-references">'+refs+'</ul></section>';
+  const endpointTerms=tractEndpoints[tract.id]||[];
+  if(endpointTerms.length){
+   const section=document.createElement('section');section.className='network-section';
+   const heading=document.createElement('h5');heading.textContent='Explorar extremos en el cerebro 3D';section.appendChild(heading);
+   const note=document.createElement('p');note.className='muted';note.textContent='Seleccioná un extremo para localizar su estructura en el modelo. El recorrido se describe anatómicamente y no representa tractografía individual.';section.appendChild(note);
+   const nodes=document.createElement('div');nodes.className='network-nodes';
+   endpointTerms.forEach(term=>{
+    const found=resolveNetworkNode(term),node=document.createElement('button');node.type='button';node.className='network-node';node.textContent=term+(found?'':' · sin malla identificable');node.disabled=!found;
+    if(found)node.addEventListener('click',()=>{controls.autoRotate=false;selectStructure(found);});
+    nodes.appendChild(node);
+   });
+   section.appendChild(nodes);detail.appendChild(section);
+  }
  }
  show(tracts[0],host.querySelector('button'));
 }
