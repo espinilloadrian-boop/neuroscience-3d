@@ -1,6 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { clinicalCases } from '../src/clinical-cases.js';
+import { clinicalReading } from '../src/clinical-reading.js';
 import { clinicalCaseLinks } from '../src/clinical-case-links.js';
 import { networks } from '../src/networks.js';
 import { cognitiveDomains } from '../src/cognitive-domains.js';
@@ -111,5 +112,15 @@ test('los dominios cognitivos solo enlazan instrumentos y correlaciones existent
     for (const id of domain.tests) assert.ok(testIds.has(id), `Instrumento inexistente en ${domain.id}: ${id}`);
     for (const id of domain.correlations) assert.ok(correlationIds.has(id), `Correlación inexistente en ${domain.id}: ${id}`);
     assert.ok(domain.refs.every(([label, url]) => label && url.startsWith('https://')));
+  }
+});
+
+test('cada escenario clínico tiene una guía de lectura multimodal completa', () => {
+  for (const item of clinicalCases) {
+    const steps = clinicalReading[item.id];
+    assert.ok(steps && steps.length >= 4, `Lectura multimodal incompleta: ${item.id}`);
+    assert.ok(steps.some(([heading]) => /hallazgo/i.test(heading)));
+    assert.ok(steps.some(([heading]) => /no permite concluir/i.test(heading)));
+    for (const [heading, detail] of steps) assert.ok(heading && detail);
   }
 });
