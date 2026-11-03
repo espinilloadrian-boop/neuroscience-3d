@@ -42,7 +42,7 @@ test('el catálogo de tractos mantiene identificadores únicos y descripciones c
 });
 
 test('la integración anatomo-funcional resuelve estructuras frecuentes', () => {
-  for (const label of ['left hippocampus', 'amygdala', 'thalamus', 'prefrontal cortex', 'cerebellum']) {
+  for (const label of ['left hippocampus', 'amygdala', 'thalamus', 'prefrontal cortex', 'cerebellum', 'angular gyrus', 'middle temporal gyrus', 'cuneus', 'lingual gyrus', 'nucleus accumbens', 'habenula', 'lateral geniculate body', 'medial geniculate body']) {
     const result = findAnatomyIntegration(label);
     assert.ok(result, `No se resolvió ${label}`);
     assert.ok(result.physiology && result.cognition && result.networks && result.clinical);
