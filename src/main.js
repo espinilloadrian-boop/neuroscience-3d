@@ -238,42 +238,59 @@ function renderSearch(query){
 }
 
 const networkNodeAliases={
- "corteza prefrontal":["prefrontal cortex","middle frontal gyrus","superior frontal gyrus","orbital part of inferior frontal gyrus"],
- "corteza prefrontal medial":["medial frontal gyrus","anterior cingulate gyrus"],
+ "corteza prefrontal":["prefrontal cortex","middle frontal gyrus","superior frontal gyrus","orbital part of inferior frontal gyrus","inferior frontal gyrus"],
+ "corteza prefrontal medial":["medial frontal gyrus","anterior cingulate gyrus","cingulate gyrus and sulcus (middle anterior part)"],
  "corteza prefrontal dorsolateral":["middle frontal gyrus","superior frontal gyrus"],
- "corteza prefrontal lateral":["middle frontal gyrus","superior frontal gyrus"],
- "corteza frontal":["middle frontal gyrus","superior frontal gyrus"],
- "corteza parietal posterior":["superior parietal lobule","inferior parietal lobule"],
+ "corteza prefrontal lateral":["middle frontal gyrus","superior frontal gyrus","inferior frontal gyrus"],
+ "corteza frontal":["middle frontal gyrus","superior frontal gyrus","precentral gyrus"],
+ "corteza parietal posterior":["superior parietal lobule","inferior parietal lobule","precuneus"],
  "corteza parietal superior":["superior parietal lobule"],
- "corteza parietal inferior":["inferior parietal lobule"],
+ "corteza parietal inferior":["inferior parietal lobule","angular gyrus","supramarginal gyrus"],
  "surco intraparietal":["intraparietal sulcus"],
- "cíngulo anterior":["cingulate gyrus and sulcus (middle anterior part)"],
+ "cíngulo anterior":["cingulate gyrus and sulcus (middle anterior part)","anterior cingulate"],
  "cíngulo anterior dorsal":["cingulate gyrus and sulcus (middle anterior part)"],
- "cíngulo posterior":["cingulate gyrus (posterior dorsal part)"],
- "ínsula anterior":["insula (subcentral gyrus and ant. and post. sulci)"],
- "ínsula":["insula (subcentral gyrus and ant. and post. sulci)"],
+ "cíngulo posterior":["cingulate gyrus (posterior dorsal part)","posterior cingulate"],
+ "ínsula anterior":["insula (subcentral gyrus and ant. and post. sulci)","insula"],
+ "ínsula":["insula (subcentral gyrus and ant. and post. sulci)","insula"],
  "precúneo":["precuneus"],
- "hipocampo":["hippocampus"],
- "globo pálido":["globus pallidus internal","globus pallidus external"],
- "estriado":["caudate nucleus","putamen"],
- "tálamo":["anterior nuclei of thalamus"],
- "hipotálamo":["anterior hypothalamus","lateral hypothalamus","posterior hypothalamus","tuberal hypothalamus"],
+ "hipocampo":["hippocampus","hippocampus proper"],
+ "corteza entorrinal":["entorhinal cortex","entorhinal"],
+ "giro dentado":["dentate gyrus"],
+ "subículo":["subiculum"],
+ "amígdala":["amygdala","amygdaloid complex","amygdaloid body"],
+ "globo pálido":["globus pallidus internal","globus pallidus external","globus pallidus"],
+ "estriado":["caudate nucleus","putamen","striatum"],
+ "núcleo caudado":["caudate nucleus","caudate"],
+ "putamen":["putamen"],
+ "tálamo":["thalamus","anterior nuclei of thalamus","mediodorsal nucleus of thalamus","lateral geniculate nucleus","medial geniculate nucleus"],
+ "hipotálamo":["hypothalamus","anterior hypothalamus","lateral hypothalamus","posterior hypothalamus","tuberal hypothalamus"],
  "cerebelo":["cerebellum"],
- "corteza somatosensorial":["postcentral gyrus"],
- "corteza visual":["calcarine sulcus","cuneus"],
- "corteza auditiva":["transverse temporal gyrus"],
+ "corteza somatosensorial":["postcentral gyrus","primary somatosensory cortex"],
+ "corteza visual":["calcarine sulcus","cuneus","lateral occipital gyrus"],
+ "corteza auditiva":["transverse temporal gyrus","superior temporal gyrus"],
  "campos oculares frontales":["frontal eye field"],
- "corteza parahipocampal":["medial occipitotemporal gyrus (parahippocampal)"]
+ "corteza parahipocampal":["medial occipitotemporal gyrus (parahippocampal)","parahippocampal gyrus"],
+ "cuerpo calloso":["corpus callosum"],
+ "cápsula interna":["internal capsule"],
+ "tronco encefálico":["brainstem","mesencephalon","pons","medulla oblongata"]
 };
 function resolveNetworkNode(term){
  const key=normalise(term);
  const aliases=networkNodeAliases[key]||[];
  const all=[...structures.values()];
  const exact=all.filter(s=>normalise(s.label)===key);
- const candidates=exact.length?exact:all.filter(s=>aliases.some(alias=>normalise(s.label)===normalise(alias)));
- if(!candidates.length)return null;
- const bilateral=candidates.filter(s=>s.side==='left'||s.side==='right');
- return bilateral.length?bilateral[0]:candidates[0];
+ if(exact.length)return exact.find(s=>s.side==='left')||exact[0];
+ const aliasMatches=all.filter(s=>aliases.some(alias=>normalise(s.label)===normalise(alias)));
+ if(aliasMatches.length)return aliasMatches.find(s=>s.side==='left')||aliasMatches[0];
+ // Coincidencia parcial solo cuando es suficientemente específica; evita asignar una región
+ // amplia a una malla de nombre parecido pero anatómicamente distinta.
+ const partial=all.filter(s=>aliases.some(alias=>{
+  const a=normalise(alias),label=normalise(s.label);
+  return a.length>=9&&(label.includes(a)||a.includes(label));
+ }));
+ if(partial.length===1)return partial[0];
+ const bilateral=partial.filter(s=>s.side==='left'||s.side==='right');
+ return bilateral.length?bilateral[0]:null;
 }
 function renderNetworkExplorer(){
  const host=document.querySelector('#network-list');
