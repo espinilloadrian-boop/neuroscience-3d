@@ -180,10 +180,28 @@ function registerModel(gltf){
 }
 
 function applyVisibility(mesh){const catOn=layerEnabled.get(mesh.userData.atlasCategory)!==false;const side=mesh.userData.atlasSide;const sideOn=activeHemisphere==='both'||side==='median'||side===activeHemisphere;mesh.visible=catOn&&sideOn;}
+function focusStructure(s){
+ const bounds=new THREE.Box3();
+ s.meshes.forEach(mesh=>bounds.expandByObject(mesh));
+ if(bounds.isEmpty())return;
+ const center=bounds.getCenter(new THREE.Vector3());
+ const sphere=bounds.getBoundingSphere(new THREE.Sphere());
+ const direction=camera.position.clone().sub(controls.target);
+ if(direction.lengthSq()<1e-8)direction.set(0,0,1);
+ direction.normalize();
+ const distance=THREE.MathUtils.clamp(sphere.radius*3.4,2.8,10);
+ controls.target.copy(center);
+ camera.position.copy(center).addScaledVector(direction,distance);
+ camera.near=Math.max(.005,distance/1000);
+ camera.far=Math.max(200,distance*30);
+ camera.updateProjectionMatrix();
+ controls.update();
+}
 function selectStructure(s){
  if(!s)return;
  if(layerEnabled.get(s.category)===false){layerEnabled.set(s.category,true);meshes.filter(m=>m.userData.atlasCategory===s.category).forEach(applyVisibility);renderLayerControls();}
  selectedId=s.id;
+ focusStructure(s);
  meshes.forEach(m=>{
   const active=String(m.userData.atlasId??(m.userData.atlasLabel+'|'+m.userData.atlasSide+'|'+m.userData.atlasCategory))===s.id;
   m.material.emissive.setHex(active?0x344d69:0x000000);
