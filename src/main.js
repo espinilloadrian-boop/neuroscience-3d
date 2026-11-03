@@ -20,7 +20,7 @@ import { simulationModels } from './simulations.js';
 import { clinicalPharmacology } from './clinical-pharmacology.js';
 import { validateMappedRows } from './research-validation.js';
 import { summarizeNumeric, summarizeCategorical, summarizeByGroup, buildAnalysisPlan } from './research-statistics.js';
-import { compareIndependentGroups } from './research-inference.js';
+import { compareIndependentGroups, compareIndependentMultipleGroups } from './research-inference.js';
 import { parseCSV, normalizeResearchRows, summarizeResearch, pearson, pairwiseAuc, bootstrapAuc, standardizedMeanDifference, spearman, kruskalWallis, dunnPostHoc, researchFields } from './research-analysis.js';
 
 const MODEL_URL='https://raw.githubusercontent.com/itayinbarr/brainproject/2929e94f521a8ddceab26bc100a98dc06b0da060/brain-atlas/models/brain.glb';
@@ -419,7 +419,17 @@ function renderResearchProjects(){
          const number=x=>Number(x).toFixed(3),p=test.p<.001?'p &lt; .001':'p = '+number(test.p);
          result.innerHTML='<div class="research-table-wrap"><table><tbody>'+[['n Grupo A',test.n1],['n Grupo B',test.n2],['Media A ± DE',number(test.meanA)+' ± '+number(test.sdA)],['Media B ± DE',number(test.meanB)+' ± '+number(test.sdB)],['Diferencia de medias (B − A)',number(test.difference)],['IC 95% de la diferencia','['+number(test.ci95[0])+', '+number(test.ci95[1])+']'],['t de Welch',number(test.t)],['Grados de libertad',number(test.df)],['Valor p bilateral',p],['g de Hedges',test.hedgesG===null?'No estimable':number(test.hedgesG)],['IC 95% aproximado de g',test.hedgesGCi95?'['+number(test.hedgesGCi95[0])+', '+number(test.hedgesGCi95[1])+']':'No estimable'],['Faltantes/no válidos excluidos',test.excludedMissingOrInvalid]].map(([label,value])=>'<tr><th>'+label+'</th><td>'+value+'</td></tr>').join('')+'</tbody></table></div><p class="sim-caveat">Welch no asume varianzas iguales. La inferencia requiere independencia entre participantes, muestreo/diseño adecuados y revisión de valores extremos y distribución. El IC de g es aproximado; no se ajustaron covariables ni multiplicidad. No utilizar este contraste con medidas repetidas, datos pareados o conglomerados.</p>';
         });
-       }else if(groupLevels.length>2){output.insertAdjacentHTML('beforeend','<p class="sim-caveat">Se detectaron más de dos grupos. No se ejecuta una t por pares: corresponde implementar un contraste global para más de dos grupos y un procedimiento post hoc con control de multiplicidad.</p>');}
+       }else if(groupLevels.length>2){
+        const rows=raw.map(row=>{const rawValue=String(row[mapping[outcome]]??'').trim();const numeric=rawValue===''?null:Number(rawValue.replace(',','.'));return {[group]:String(row[mapping[group]]??'').trim(),[outcome]:Number.isFinite(numeric)?numeric:null};});
+        const result=compareIndependentMultipleGroups(rows,{groupField:group,outcomeField:outcome});
+        if(!result.valid){output.insertAdjacentHTML('beforeend','<p class="sim-caveat">'+escapeHtml(result.reason)+'</p>');}
+        else{
+         const number=x=>Number(x).toFixed(3),pLabel=x=>x<.001?'<escape>p</escape> &lt; .001':'p = '+number(x);
+         const groupRows=result.groups.map(g=>'<tr><td>'+escapeHtml(g.label)+'</td><td>'+g.n+'</td><td>'+number(g.mean)+'</td><td>'+number(Math.sqrt(g.variance))+'</td></tr>').join('');
+         const pairRows=result.pairwise.map(x=>'<tr><td>'+escapeHtml(x.groupA)+' vs. '+escapeHtml(x.groupB)+'</td><td>'+number(x.difference)+'</td><td>['+number(x.ci95[0])+', '+number(x.ci95[1])+']</td><td>'+pLabel(x.p)+'</td><td>'+pLabel(x.pHolm)+'</td></tr>').join('');
+         output.insertAdjacentHTML('beforeend','<section class="network-section"><h5>Contraste inferencial · más de dos grupos</h5><p class="muted">ANOVA de Welch para comparar medias sin asumir igualdad de varianzas. Comparaciones posteriores: pruebas t de Welch bilaterales con ajuste de Holm.</p><div class="research-table-wrap"><table><thead><tr><th>Grupo</th><th>n</th><th>Media</th><th>DE</th></tr></thead><tbody>'+groupRows+'</tbody></table></div><div class="research-table-wrap"><table><tbody>'+[['F de Welch',number(result.statistic)],['gl entre grupos',number(result.df1)],['gl aproximados dentro de grupos',number(result.df2)],['p global',pLabel(result.p)],['Observaciones faltantes/no válidas',result.excludedMissingOrInvalid]].map(([label,value])=>'<tr><th>'+label+'</th><td>'+value+'</td></tr>').join('')+'</tbody></table></div><h5>Comparaciones por pares · ajuste de Holm</h5><div class="research-table-wrap"><table><thead><tr><th>Comparación</th><th>Diferencia B − A</th><th>IC 95% sin ajuste</th><th>p sin ajustar</th><th>p ajustado Holm</th></tr></thead><tbody>'+pairRows+'</tbody></table></div><p class="sim-caveat">El valor p global corresponde a ANOVA de Welch. Los valores p por pares se ajustan con Holm para controlar el error familiar; los intervalos de confianza por pares son nominales, no ajustados por multiplicidad. Requiere independencia entre participantes y revisión de distribución y valores extremos. No usar con medidas repetidas, diseños pareados ni datos agrupados. No ajusta covariables.</p></section>');
+        }
+       }
       }else if(design==='paired'||design==='longitudinal'){output.insertAdjacentHTML('beforeend','<p class="sim-caveat">No se ejecutan pruebas para grupos independientes en diseños pareados o longitudinales. Se necesita un análisis específico que modele el emparejamiento o la dependencia intraindividual.</p>');}
      });
 
