@@ -21,3 +21,20 @@ test('multiple-group row adapter counts missing values',()=>{
  const r=compareIndependentMultipleGroups(rows,{groupField:'g',outcomeField:'y'});
  assert.equal(r.valid,true);assert.equal(r.k,3);assert.equal(r.excludedMissingOrInvalid,1);
 });
+
+import {compareCategoricalGroups} from '../src/research-inference.js';
+test('Pearson chi-square evaluates a sufficiently populated 2x2 table',()=>{
+ const rows=[...Array(40)].map((_,i)=>({g:i<20?'Control':'EA',y:i%20<15?'No':'Sí'}));
+ const r=compareCategoricalGroups(rows,{groupField:'g',outcomeField:'y'});
+ assert.equal(r.valid,true);assert.equal(r.method,'Chi-cuadrado de Pearson');assert.equal(r.df,1);assert.ok(r.p>=0&&r.p<=1);
+});
+test('Fisher exact is selected for sparse 2x2 tables',()=>{
+ const rows=[{g:'A',y:'Sí'},{g:'A',y:'No'},{g:'B',y:'Sí'},{g:'B',y:'Sí'}];
+ const r=compareCategoricalGroups(rows,{groupField:'g',outcomeField:'y'});
+ assert.equal(r.valid,true);assert.equal(r.method,'Prueba exacta de Fisher bilateral');assert.ok(r.p>=0&&r.p<=1);
+});
+test('sparse RxC table is not forced into an invalid chi-square approximation',()=>{
+ const rows=[{g:'A',y:'x'},{g:'A',y:'x'},{g:'B',y:'y'},{g:'C',y:'z'}];
+ const r=compareCategoricalGroups(rows,{groupField:'g',outcomeField:'y'});
+ assert.equal(r.valid,false);assert.match(r.reason,/frecuencias esperadas/);
+});
