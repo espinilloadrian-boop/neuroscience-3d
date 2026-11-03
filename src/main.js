@@ -147,9 +147,12 @@ function registerModel(gltf){
  for(const m of meshes){const ex=readExtras(m);if(ex.bx_core===1||ex.bx_core===true){coreBox.expandByObject(m);hasCore=true;}}
  if(!hasCore)coreBox.setFromObject(source);
  const center=coreBox.getCenter(new THREE.Vector3());
- source.position.sub(center);
  const radius=coreBox.getBoundingSphere(new THREE.Sphere()).radius||1;
- source.scale.setScalar(1.7/radius);
+ const fitScale=1.7/radius;
+ // Box3 está expresado en coordenadas de mundo; la traslación debe escalarse
+ // junto con la geometría para que el centro real del atlas quede en el origen.
+ source.scale.setScalar(fitScale);
+ source.position.set(-center.x*fitScale,-center.y*fitScale,-center.z*fitScale);
  source.rotation.y=Math.PI;
  brain.add(source);
  const count=structures.size;
