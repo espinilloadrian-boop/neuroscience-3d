@@ -44,7 +44,7 @@ export function welchAnova(groups){
  const statistic=numerator/denominator,df1=k-1,df2=(k*k-1)/(3*correction),p=Math.max(0,Math.min(1,1-fCdf(statistic,df1,df2)));
  const pairs=[];
  for(let i=0;i<k;i++)for(let j=i+1;j<k;j++){
-  const a=summaries[i],b=summaries[j],r=welchTTest(a.values,b.values);
+  const a=summaries[i],b=summaries[j],r=welchTTest(usable[i].values,usable[j].values);
   if(r.valid)pairs.push({groupA:a.label,groupB:b.label,difference:r.difference,ci95:r.ci95,t:r.t,df:r.df,p:r.p});
  }
  const adjusted=holmAdjust(pairs);
