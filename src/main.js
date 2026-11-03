@@ -387,9 +387,11 @@ function renderResearchProjects(){
      if(descriptiveForm)descriptiveForm.addEventListener('submit',analysisEvent=>{
       analysisEvent.preventDefault();const cfg=new FormData(descriptiveForm),outcome=String(cfg.get('outcome')),group=String(cfg.get('group')||''),design=String(cfg.get('design')),id=String(cfg.get('id')||'');
       const variable=analysisVars.find(v=>v.name===outcome),type=quantitative(variable)?'continuous':'nominal';
-      const analysisDictionary=analysisVars.map(v=>({name:v.name,type:quantitative(v)?(v.type==='Numérica discreta'?'discrete':'continuous'):(v.type==='Categórica ordinal'?'ordinal':'nominal')}));
+      const analysisDictionary=variables.filter(v=>mapping[v.name]).map(v=>({name:v.name,type:quantitative(v)?(v.type==='Numérica discreta'?'discrete':'continuous'):(v.type==='Categórica ordinal'?'ordinal':categorical(v)?'nominal':'text')}));
       const plan=buildAnalysisPlan({variables:analysisDictionary,design,outcome,predictors:[],group:group||null,id:id||null});
       const output=report.querySelector('#research-descriptive-output');
+      const selectedInvalid=[outcome,...(group?[group]:[])].filter(name=>perVariable[name]&&(perVariable[name].invalidType||perVariable[name].invalidAllowed));
+      if(selectedInvalid.length){output.innerHTML='<p class="sim-caveat">No se calcularon descriptivos: hay valores incompatibles en '+selectedInvalid.map(escapeHtml).join(', ')+'. Revisá y resolvé las inconsistencias antes de analizar.</p>';return;}
       if(!plan.valid){output.innerHTML='<p class="sim-caveat">'+plan.errors.map(escapeHtml).join('<br>')+'</p>';return;}
       const values=raw.map(row=>{const value=String(row[mapping[outcome]]??'').trim();if(!value)return null;if(quantitative(variable)){const n=Number(value.replace(',','.'));return Number.isFinite(n)?n:null;}return value;});
       const summary=type==='continuous'?summarizeNumeric(values):summarizeCategorical(values);
