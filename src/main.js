@@ -23,7 +23,8 @@ import { summarizeNumeric, summarizeCategorical, summarizeByGroup, buildAnalysis
 import { compareIndependentGroups, compareIndependentMultipleGroups, compareCategoricalGroups } from './research-inference.js';
 import { parseCSV, normalizeResearchRows, summarizeResearch, pearson, pairwiseAuc, bootstrapAuc, standardizedMeanDifference, spearman, kruskalWallis, dunnPostHoc, researchFields } from './research-analysis.js';
 
-const MODEL_URL='https://raw.githubusercontent.com/itayinbarr/brainproject/2929e94f521a8ddceab26bc100a98dc06b0da060/brain-atlas/models/brain.glb';
+const MODEL_URL='https://cdn.jsdelivr.net/gh/itayinbarr/brainproject@2929e94f521a8ddceab26bc100a98dc06b0da060/brain-atlas/models/brain.glb';
+const MODEL_FALLBACK_URL='https://raw.githubusercontent.com/itayinbarr/brainproject/2929e94f521a8ddceab26bc100a98dc06b0da060/brain-atlas/models/brain.glb';
 const MANIFEST_URL='https://raw.githubusercontent.com/itayinbarr/brainproject/2929e94f521a8ddceab26bc100a98dc06b0da060/brain-atlas/models/manifest.json';
 const DRACO_URL='https://www.gstatic.com/draco/versioned/decoders/1.5.6/';
 const sceneHost=document.querySelector('#scene');
@@ -69,10 +70,54 @@ const searchResults=document.querySelector('#search-results');
 
 function normalise(s){return (s||'').toString().normalize('NFD').replace(/[\u0300-\u036f]/g,'').toLowerCase();}
 function readExtras(o){const chain=[];let node=o;while(node){chain.unshift(node.userData||{});node=node.parent;}return Object.assign({},...chain);}
-function showError(message){
+function buildFallbackBrain(){
+ brain.clear();
+ const makeHemisphere=(side)=>{
+  const geometry=new THREE.SphereGeometry(1,96,72);
+  const p=geometry.attributes.position;
+  for(let i=0;i<p.count;i++){
+   const x=p.getX(i),y=p.getY(i),z=p.getZ(i);
+   const taper=1+0.035*Math.sin(18*y+5*z)*Math.sin(13*x+4*y)+0.018*Math.sin(31*z+8*x);
+   p.setXYZ(i,x*taper,y*taper,z*taper);
+  }
+  geometry.computeVertexNormals();
+  const material=new THREE.MeshStandardMaterial({color:0xb8a5d2,roughness:.82,side:THREE.DoubleSide});
+  const mesh=new THREE.Mesh(geometry,material);
+  mesh.scale.set(1.02,1.23,1.48);
+  mesh.position.set(side*.53,.12,0);
+  mesh.scale.x*=.78;
+  brain.add(mesh);
+  const gyriMat=new THREE.MeshStandardMaterial({color:0xd0c0e1,roughness:.9});
+  for(let j=0;j<22;j++){
+   const a=(j/22)*Math.PI*2;
+   const curve=[];
+   for(let k=0;k<=32;k++){
+    const t=k/32;
+    const theta=a+t*1.1;
+    const x=side*.53+side*.72*Math.cos(theta)*Math.sin(.25+Math.PI*t);
+    const y=.12+.93*Math.sin(theta)*Math.sin(.25+Math.PI*t);
+    const z=-1.18+2.36*t;
+    curve.push(new THREE.Vector3(x,y,z));
+   }
+   const tube=new THREE.Mesh(new THREE.TubeGeometry(new THREE.CatmullRomCurve3(curve),48,.018,6,false),gyriMat);
+   brain.add(tube);
+  }
+ };
+ makeHemisphere(-1);makeHemisphere(1);
+ const cerebellum=new THREE.Mesh(new THREE.SphereGeometry(1,48,32),new THREE.MeshStandardMaterial({color:0xc08fae,roughness:.9}));
+ cerebellum.scale.set(.68,.48,.62);cerebellum.position.set(0,-.92,-1.12);brain.add(cerebellum);
+ const stem=new THREE.Mesh(new THREE.CylinderGeometry(.22,.34,.95,32),new THREE.MeshStandardMaterial({color:0xa5a2b6,roughness:.9}));
+ stem.position.set(0,-1.12,-.45);stem.rotation.x=-.18;brain.add(stem);
+ const box=new THREE.Box3().setFromObject(brain);
+ const center=box.getCenter(new THREE.Vector3());brain.position.sub(center);
+ controls.target.set(0,0,0);camera.position.set(0,1.1,8.5);controls.update();
+ credit.textContent='MODELO DE CONTINGENCIA · REPRESENTACIÓN SIMPLIFICADA';
  loading.classList.add('hidden');
- info.innerHTML='<div class="region-kicker">CARGA DEL MODELO</div><h2>No se pudo cargar el atlas</h2><p class="muted">'+message+'</p><p class="muted">La escena anatómica necesita conexión con el repositorio de origen y el decodificador Draco.</p>';
- credit.textContent='MODELO ANATÓMICO NO DISPONIBLE';
+ info.innerHTML='<div class="region-kicker">VISUALIZACIÓN DE CONTINGENCIA</div><h2>Encéfalo 3D simplificado</h2><p class="muted">El servidor del modelo anatómico detallado no respondió. Se muestra una representación 3D local para mantener disponible la exploración visual; no permite seleccionar estructuras anatómicas individuales.</p>';
+}
+function showError(message){
+ console.error(message);
+ buildFallbackBrain();
 }
 
 function registerModel(gltf){
@@ -739,5 +784,6 @@ function animate(){requestAnimationFrame(animate);controls.update();renderer.ren
 const draco=new DRACOLoader();draco.setDecoderPath(DRACO_URL);
 const loader=new GLTFLoader();loader.setDRACOLoader(draco);
 fetch(MANIFEST_URL).then(response=>{if(!response.ok)throw new Error('Manifest HTTP '+response.status);return response.json();}).then(manifest=>{manifestById=new Map((manifest.nodes||[]).map(node=>[String(node.id),node]));loading.textContent='Metadatos cargados. Descargando geometría 3D…';}).catch(err=>{console.warn('No se pudo cargar el manifiesto anatómico; se usarán metadatos glTF:',err);}).finally(()=>{
- loader.load(MODEL_URL,registerModel,progress=>{if(progress.total)loading.textContent='Cargando modelo anatómico… '+Math.round(progress.loaded/progress.total*100)+'%';},err=>{console.error('No se pudo cargar el modelo anatómico:',err);showError('El servidor de origen o el decodificador no respondió. Volvé a cargar la página cuando haya conexión.');});
+ const loadFallback=()=>loader.load(MODEL_FALLBACK_URL,registerModel,progress=>{if(progress.total)loading.textContent='Reintentando modelo anatómico… '+Math.round(progress.loaded/progress.total*100)+'%';},err=>{console.error('Fallaron las dos fuentes del modelo anatómico:',err);showError('No fue posible descargar el modelo anatómico externo. Se activó una representación 3D local simplificada.');});
+ loader.load(MODEL_URL,registerModel,progress=>{if(progress.total)loading.textContent='Cargando modelo anatómico… '+Math.round(progress.loaded/progress.total*100)+'%';},err=>{console.warn('Falló CDN primaria; se intenta fuente alternativa:',err);loading.textContent='Reintentando desde el repositorio de origen…';loadFallback();});
 });
