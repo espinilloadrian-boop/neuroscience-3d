@@ -855,7 +855,9 @@ function animate(){requestAnimationFrame(animate);controls.update();renderer.ren
 
 const draco=new DRACOLoader();draco.setDecoderPath(DRACO_URL);
 const loader=new GLTFLoader();loader.setDRACOLoader(draco);
-fetch(MANIFEST_URL).then(response=>{if(!response.ok)throw new Error('Manifest HTTP '+response.status);return response.json();}).then(manifest=>{manifestById=new Map((manifest.nodes||[]).map(node=>[String(node.id),node]));loading.textContent='Metadatos cargados. Descargando geometría 3D…';}).catch(err=>{console.warn('No se pudo cargar el manifiesto anatómico; se usarán metadatos glTF:',err);}).finally(()=>{
+const manifestController=new AbortController();
+const manifestTimeout=setTimeout(()=>manifestController.abort(),8000);
+fetch(MANIFEST_URL,{signal:manifestController.signal}).then(response=>{if(!response.ok)throw new Error('Manifest HTTP '+response.status);return response.json();}).then(manifest=>{manifestById=new Map((manifest.nodes||[]).map(node=>[String(node.id),node]));loading.textContent='Metadatos cargados. Descargando geometría 3D…';}).catch(err=>{console.warn('No se pudo cargar el manifiesto anatómico en 8 segundos; se continuará con los metadatos incluidos en el GLB:',err);}).finally(()=>{clearTimeout(manifestTimeout);
  let modelSettled=false;
  const timeout=setTimeout(()=>{if(modelSettled)return;modelSettled=true;console.warn('Tiempo de espera agotado para CDN primaria; se intenta fuente alternativa.');loading.textContent='La descarga tarda más de lo esperado; probando otra fuente…';loadFallback();},18000);
  const loadFallback=()=>{
