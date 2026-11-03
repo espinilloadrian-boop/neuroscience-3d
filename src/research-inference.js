@@ -28,3 +28,32 @@ export function compareIndependentGroups(rows,{groupField,outcomeField,groupA,gr
  for(const row of rows){const value=row[outcomeField];if(row[groupField]===groupA){if(Number.isFinite(value))a.push(value);else excluded++;}else if(row[groupField]===groupB){if(Number.isFinite(value))b.push(value);else excluded++;}}
  return {...welchTTest(a,b),groupA,groupB,excludedMissingOrInvalid:excluded};
 }
+
+function fCdf(x,d1,d2){if(x<=0)return 0;const z=d1*x/(d1*x+d2);return regBeta(z,d1/2,d2/2);}
+function fQuantile(p,d1,d2){let lo=0,hi=1;while(fCdf(hi,d1,d2)<p&&hi<1e12)hi*=2;for(let i=0;i<100;i++){const mid=(lo+hi)/2;if(fCdf(mid,d1,d2)<p)lo=mid;else hi=mid;}return (lo+hi)/2;}
+function holmAdjust(items){const sorted=items.map((x,i)=>({...x,index:i})).sort((a,b)=>a.p-b.p),m=sorted.length;let previous=0;for(let i=0;i<m;i++){const adjusted=Math.min(1,(m-i)*sorted[i].p);previous=Math.max(previous,adjusted);sorted[i].pHolm=previous;}return sorted.sort((a,b)=>a.index-b.index);}
+export function welchAnova(groups){
+ const usable=groups.map(g=>({label:g.label,values:clean(g.values)})).filter(g=>g.values.length>=2);
+ if(usable.length<3)return {valid:false,reason:'Se necesitan al menos tres grupos con dos o más observaciones válidas.'};
+ const summaries=usable.map(g=>({label:g.label,n:g.values.length,mean:mean(g.values),variance:variance(g.values)}));
+ if(summaries.some(g=>!Number.isFinite(g.variance)||g.variance<=0))return {valid:false,reason:'Cada grupo debe presentar variabilidad estimable y distinta de cero.'};
+ const k=summaries.length,weights=summaries.map(g=>g.n/g.variance),W=weights.reduce((a,b)=>a+b,0),weightedMean=summaries.reduce((s,g,i)=>s+weights[i]*g.mean,0)/W;
+ const numerator=summaries.reduce((s,g,i)=>s+weights[i]*(g.mean-weightedMean)**2,0)/(k-1);
+ const correction=summaries.reduce((s,g,i)=>s+(1-weights[i]/W)**2/(g.n-1),0);
+ const denominator=1+(2*(k-2)/(k*k-1))*correction;
+ const statistic=numerator/denominator,df1=k-1,df2=(k*k-1)/(3*correction),p=Math.max(0,Math.min(1,1-fCdf(statistic,df1,df2)));
+ const pairs=[];
+ for(let i=0;i<k;i++)for(let j=i+1;j<k;j++){
+  const a=summaries[i],b=summaries[j],r=welchTTest(a.values,b.values);
+  if(r.valid)pairs.push({groupA:a.label,groupB:b.label,difference:r.difference,ci95:r.ci95,t:r.t,df:r.df,p:r.p});
+ }
+ const adjusted=holmAdjust(pairs);
+ return {valid:true,method:'ANOVA de Welch',k,groups:summaries,statistic,df1,df2,p,pairwise:adjusted.map(({index,...x})=>x),pairwiseMethod:'Comparaciones t de Welch bilaterales con ajuste de Holm',familywiseAlpha:.05};
+}
+export function compareIndependentMultipleGroups(rows,{groupField,outcomeField}={}){
+ if(!groupField||!outcomeField)return {valid:false,reason:'Seleccioná la variable de agrupación y el resultado cuantitativo.'};
+ const labels=[...new Set(rows.map(r=>r[groupField]).filter(v=>v!==null&&v!==undefined&&String(v).trim()!==''))].map(String).sort((a,b)=>a.localeCompare(b,'es'));
+ const groups=labels.map(label=>({label,values:rows.filter(r=>String(r[groupField])===label).map(r=>r[outcomeField]).filter(Number.isFinite)}));
+ const excluded=rows.filter(r=>labels.includes(String(r[groupField]))&&!Number.isFinite(r[outcomeField])).length;
+ return {...welchAnova(groups),excludedMissingOrInvalid:excluded};
+}
