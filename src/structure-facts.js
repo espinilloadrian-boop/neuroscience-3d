@@ -149,6 +149,6 @@ export const structureFacts = [
 ];
 
 export function findStructureFact(label) {
-  const value = String(label || "").normalize("NFD").replace(/[\\u0300-\\u036f]/g, "").toLowerCase();
-  return structureFacts.find(f => f.match.some(alias => value.includes(alias.normalize("NFD").replace(/[\\u0300-\\u036f]/g, "").toLowerCase()))) || null;
+  const value = String(label || "").normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase();
+  return structureFacts.find(f => f.match.some(alias => value.includes(alias.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase()))) || null;
 }
