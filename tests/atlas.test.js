@@ -141,7 +141,11 @@ test('el resolvedor anatómico prioriza el nombre de malla sobre región y jerar
     { label: 'Hippocampus proper', region: 'Temporal lobe', ta2: ['Brain', 'Hippocampus'], side: 'left' }
   ];
   assert.equal(normalizeAnatomyLabel('Ínsula — izquierda'), 'insula izquierda');
-  assert.equal(resolveAnatomyTarget(items, ['hipocampo'])?.side, 'left');
+  assert.equal(resolveAnatomyTarget(items, ['hippocampus'])?.side, 'left');
   assert.equal(resolveAnatomyTarget(items, ['corteza cerebral'])?.label, 'Corteza cerebral');
   assert.equal(resolveAnatomyTarget(items, ['estructura inexistente']), null);
+  assert.equal(resolveAnatomyTarget([
+    { label: 'Anterior hypothalamus', region: 'Diencephalon', side: 'left' },
+    { label: 'Anterior nuclei of thalamus', region: 'Diencephalon', side: 'left' }
+  ], ['thalamus'])?.label, 'Anterior nuclei of thalamus');
 });
