@@ -4,6 +4,7 @@ import { clinicalCases } from '../src/clinical-cases.js';
 import { clinicalReading } from '../src/clinical-reading.js';
 import { clinicalCaseLinks } from '../src/clinical-case-links.js';
 import { networks } from '../src/networks.js';
+import { resolveNetworkStructures } from '../src/network-mapping.js';
 import { cognitiveDomains } from '../src/cognitive-domains.js';
 import { correlations } from '../src/clinical-correlation.js';
 import { neuropsychTests } from '../src/neuropsych-tests.js';
@@ -48,6 +49,28 @@ test('las redes funcionales definen conexiones explícitas entre nodos declarado
       assert.notEqual(from, to, `Conexión autorreferente en ${network.id}`);
     }
   }
+});
+
+test('las etiquetas de redes se resuelven contra nombres reales del atlas', () => {
+  const labels = [
+    'Middle frontal gyrus', 'Superior frontal gyrus', 'Orbital part of inferior frontal gyrus',
+    'Caudate nucleus', 'Putamen', 'Globus pallidus internal', 'Globus pallidus external',
+    'Anterior nuclei of thalamus', 'Lateral geniculate body', 'Medial geniculate body',
+    'Transverse temporal gyri', 'Cingulate gyrus and sulcus (Posterior dorsal part)',
+    'Insula (Subcentral gyrus and ant. and post. sulci)', 'Nucleus accumbens',
+    'Hippocampus', 'Medial occipitotemporal gyrus (Parahippocampal)'
+  ];
+  const structures = new Map(labels.map((label, index) => [String(index), { id: String(index), label }]));
+  assert.deepEqual(
+    resolveNetworkStructures('Corteza prefrontal', structures).map(item => item.label).sort(),
+    ['Middle frontal gyrus', 'Orbital part of inferior frontal gyrus', 'Superior frontal gyrus'].sort()
+  );
+  assert.ok(resolveNetworkStructures('Globo pálido', structures).length === 2);
+  assert.ok(resolveNetworkStructures('Tálamo', structures).length === 3);
+  assert.ok(resolveNetworkStructures('Corteza auditiva', structures).some(item => item.label === 'Transverse temporal gyri'));
+  assert.ok(resolveNetworkStructures('Cíngulo posterior', structures).some(item => item.label.includes('Posterior dorsal')));
+  assert.equal(resolveNetworkStructures('Amígdala', structures).length, 0);
+  assert.equal(resolveNetworkStructures('Corteza entorrinal', structures).length, 0);
 });
 
 test('el catálogo de tractos mantiene identificadores únicos y descripciones clínicas', () => {
