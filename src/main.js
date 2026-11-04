@@ -4,6 +4,7 @@ import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
 import { DRACOLoader } from 'three/addons/loaders/DRACOLoader.js';
 import './style.css';
 import { findStructureFact } from './structure-facts.js';
+import { resolveAnatomyTarget } from './anatomy-resolver.js';
 import { findAnatomyIntegration } from './anatomy-integration.js';
 import { networks } from './networks.js';
 import { tracts } from './tracts.js';
@@ -398,11 +399,7 @@ function renderClinicalCaseExplorer(){
   detail.innerHTML='<p class="network-tag">'+escapeHtml(clinicalCase.domain)+'</p><h4>'+escapeHtml(clinicalCase.name)+'</h4><section class="network-section clinical-actions"><h5>Explorar en el atlas 3D</h5><p class="muted">Seleccioná una estructura para intentar localizar su malla en el atlas. La disponibilidad depende de las estructuras identificadas en el modelo.</p><div class="clinical-targets">'+targets+'</div><p class="clinical-focus-status muted" aria-live="polite">Las asociaciones son orientativas y no representan una lesión individual.</p></section>'+[['Pregunta clínica',clinicalCase.question],['Modalidades relevantes',clinicalCase.modalities],['Hallazgos de imagen posibles',clinicalCase.findings],['Anatomía y redes implicadas',clinicalCase.network],['Perfil cognitivo a explorar',clinicalCase.cognition],['Integración e interpretación',clinicalCase.interpretation],['Límites y precauciones',clinicalCase.caveat]].map(([h,p])=>'<section class="network-section"><h5>'+h+'</h5><p class="muted">'+escapeHtml(p)+'</p></section>').join('')+'<section class="network-section clinical-reading"><h5>Lectura multimodal: del hallazgo a la hipótesis</h5><p class="muted">Secuencia orientativa para integrar neuroimagen y evaluación neuropsicológica sin convertir correlaciones en causalidad individual.</p>'+((clinicalReading[clinicalCase.id]||[]).map(([heading,value])=>'<div class="clinical-reading-row"><h6>'+escapeHtml(heading)+'</h6><p class="muted">'+escapeHtml(value)+'</p></div>').join(''))+'</section><section class="network-section"><h5>Guías y bibliografía</h5><ul class="fact-references">'+refs+'</ul></section>';
   detail.querySelectorAll('[data-target-index]').forEach(targetButton=>targetButton.addEventListener('click',()=>{
    const target=links.structures[Number(targetButton.dataset.targetIndex)];
-   const aliases=target.aliases.map(normalise);
-   const found=[...structures.values()].find(item=>{
-    const label=normalise(item.label),region=normalise(item.region),ta2=normalise(item.ta2.join(' '));
-    return aliases.some(alias=>label.includes(alias)||region.includes(alias)||ta2.includes(alias));
-   });
+   const found=resolveAnatomyTarget([...structures.values()],target.aliases);
    const status=detail.querySelector('.clinical-focus-status');
    if(found){
     controls.autoRotate=false;selectStructure(found);searchInput.value=found.label;renderSearch(found.label);
