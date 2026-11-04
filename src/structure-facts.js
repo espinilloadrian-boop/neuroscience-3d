@@ -83,7 +83,7 @@ export const structureFacts = [
   }
   ,
   {
-    match: ["basal ganglia", "basal nuclei", "ganglios basales", "núcleos basales", "nucleos basales", "striatum", "caudate", "putamen", "globus pallidus"],
+    match: ["basal ganglia", "basal nuclei", "ganglios basales", "núcleos basales", "nucleos basales", "striatum", "putamen", "globus pallidus"],
     title: "Ganglios basales",
     location: "Conjunto de núcleos subcorticales telencefálicos y diencefálicos, profundos a la corteza cerebral. El término funcional incluye estriado, globo pálido, núcleo subtalámico y sustancia negra.",
     boundaries: "Estriado dorsal (caudado y putamen), globo pálido externo e interno, núcleo subtalámico y sustancia negra pars compacta/reticulata. El estriado ventral incluye núcleo accumbens. La clasificación anatómica y funcional no es idéntica.",
