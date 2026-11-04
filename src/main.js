@@ -202,6 +202,7 @@ function focusStructure(s){
 }
 function selectStructure(s){
  if(!s)return;
+ clearFunctionalOverlay();
  if(layerEnabled.get(s.category)===false){layerEnabled.set(s.category,true);meshes.filter(m=>m.userData.atlasCategory===s.category).forEach(applyVisibility);renderLayerControls();}
  selectedId=s.id;
  if(isolateSelected)meshes.forEach(applyVisibility);
@@ -949,7 +950,7 @@ buttons.forEach(b=>b.addEventListener('click',()=>{
  if(found){controls.autoRotate=false;selectStructure(found);searchInput.value=found.label;renderSearch(found.label);}
 }));
 searchInput?.addEventListener('input',e=>renderSearch(e.target.value));
-document.querySelector('#reset-view').addEventListener('click',()=>{isolateSelected=false;selectedId=null;const isolateButton=document.querySelector('#isolate-structure');isolateButton?.classList.remove('active');isolateButton?.setAttribute('aria-pressed','false');meshes.forEach(m=>{m.material.emissive.setHex(0x000000);m.material.emissiveIntensity=0;applyVisibility(m);});info.innerHTML='<div class="region-kicker">SISTEMA NERVIOSO CENTRAL</div><h2>Seleccioná una región</h2><p class="muted">Explorá el modelo y seleccioná una estructura para consultar su descripción anatómica y funcional.</p>';buttons.forEach(b=>b.classList.remove('selected'));camera.position.set(0,1.1,8.5);controls.target.set(0,0,0);controls.autoRotate=true;controls.update();});
+document.querySelector('#reset-view').addEventListener('click',()=>{clearFunctionalOverlay();isolateSelected=false;selectedId=null;const isolateButton=document.querySelector('#isolate-structure');isolateButton?.classList.remove('active');isolateButton?.setAttribute('aria-pressed','false');meshes.forEach(m=>{m.material.emissive.setHex(0x000000);m.material.emissiveIntensity=0;applyVisibility(m);});info.innerHTML='<div class="region-kicker">SISTEMA NERVIOSO CENTRAL</div><h2>Seleccioná una región</h2><p class="muted">Explorá el modelo y seleccioná una estructura para consultar su descripción anatómica y funcional.</p>';buttons.forEach(b=>b.classList.remove('selected'));camera.position.set(0,1.1,8.5);controls.target.set(0,0,0);controls.autoRotate=true;controls.update();});
 const isolateButton=document.querySelector('#isolate-structure');
 isolateButton?.addEventListener('click',()=>{if(!selectedId)return;isolateSelected=!isolateSelected;isolateButton.classList.toggle('active',isolateSelected);isolateButton.setAttribute('aria-pressed',String(isolateSelected));meshes.forEach(applyVisibility);});
 document.querySelector('#toggle-labels').addEventListener('click',e=>{labelsOn=!labelsOn;e.currentTarget.classList.toggle('active',labelsOn);floorGrid.visible=labelsOn;sectionGuide.visible=labelsOn&&activePlane!=='none';});
