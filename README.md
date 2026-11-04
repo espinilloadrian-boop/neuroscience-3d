@@ -14,7 +14,8 @@ La rama de trabajo actual amplía el prototipo publicado. Los cambios descritos 
 - La disponibilidad de una ficha anatómica o de una correspondencia con redes depende de la identificación verificable de la malla.
 
 ### Integración anatómica y funcional
-- 27 fichas anatomo-funcionales relacionan estructuras seleccionadas con neurofisiología, funciones cognitivas/conductuales, redes y relevancia clínica.
+- 27 integraciones anatomo-funcionales relacionan estructuras seleccionadas con neurofisiología, funciones cognitivas/conductuales, redes y relevancia clínica.
+- 11 fichas anatómicas complementarias desarrollan ubicación, límites, conectividad, función, correlatos clínicos, limitaciones y referencias; incluyen ínsula y núcleo caudado.
 - Explorador de 10 tractos con origen, trayecto, terminaciones, función, relevancia clínica, neuroimagen y límites metodológicos.
 - Explorador de redes funcionales con nodos navegables cuando existe una correspondencia suficientemente específica con una malla.
 - Las descripciones funcionales representan contribuciones a circuitos distribuidos; no implican localización exclusiva ni causalidad automática.
