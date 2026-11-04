@@ -37,6 +37,19 @@ test('el catálogo neuropsicológico contiene instrumentos sin material protegid
   }
 });
 
+test('las redes funcionales definen conexiones explícitas entre nodos declarados', () => {
+  assert.ok(networks.length >= 8);
+  for (const network of networks) {
+    assert.ok(Array.isArray(network.nodes) && network.nodes.length >= 3, `Red sin nodos: ${network.id}`);
+    assert.ok(Array.isArray(network.edges) && network.edges.length >= 2, `Red sin conexiones explícitas: ${network.id}`);
+    for (const [from, to] of network.edges) {
+      assert.ok(network.nodes.includes(from), `Nodo de origen no declarado en ${network.id}: ${from}`);
+      assert.ok(network.nodes.includes(to), `Nodo de destino no declarado en ${network.id}: ${to}`);
+      assert.notEqual(from, to, `Conexión autorreferente en ${network.id}`);
+    }
+  }
+});
+
 test('el catálogo de tractos mantiene identificadores únicos y descripciones clínicas', () => {
   assert.equal(tracts.length, 10);
   assert.equal(new Set(tracts.map(item => item.id)).size, tracts.length);
