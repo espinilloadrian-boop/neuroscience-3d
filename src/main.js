@@ -245,6 +245,10 @@ const networkNodeAliases={
  "corteza prefrontal lateral":["middle frontal gyrus","superior frontal gyrus","inferior frontal gyrus"],
  "corteza frontal":["middle frontal gyrus","superior frontal gyrus","precentral gyrus"],
  "corteza motora":["precentral gyrus","primary motor cortex"],
+ "corteza motora primaria":["precentral gyrus","primary motor cortex"],
+ "globo pálido":["globus pallidus internal","globus pallidus external","globus pallidus"],
+ "fascículo arqueado":["arcuate fasciculus"],
+ "fascículo longitudinal superior":["superior longitudinal fascicle"],
  "corteza premotora":["precentral gyrus","middle frontal gyrus","superior frontal gyrus"],
  "sustancia negra":["substantia nigra"],
  "estriado ventral":["nucleus accumbens","ventral striatum"],
@@ -281,27 +285,45 @@ const networkNodeAliases={
  "cápsula interna":["internal capsule"],
  "tronco encefálico":["brainstem","mesencephalon","pons","medulla oblongata"]
 };
-function resolveNetworkNode(term){
- const key=normalise(term);
- const aliases=networkNodeAliases[key]||[];
- const all=[...structures.values()];
- const exact=all.filter(s=>normalise(s.label)===key);
- if(exact.length)return exact.find(s=>s.side==='left')||exact[0];
- const aliasMatches=all.filter(s=>aliases.some(alias=>normalise(s.label)===normalise(alias)));
- if(aliasMatches.length)return aliasMatches.find(s=>s.side==='left')||aliasMatches[0];
- // Coincidencia parcial solo cuando es suficientemente específica; evita asignar una región
- // amplia a una malla de nombre parecido pero anatómicamente distinta.
- const partial=all.filter(s=>aliases.some(alias=>{
-  const a=normalise(alias),label=normalise(s.label);
-  return a.length>=9&&(label.includes(a)||a.includes(label));
- }));
- if(partial.length===1)return partial[0];
- const bilateral=partial.filter(s=>s.side==='left'||s.side==='right');
- return bilateral.length?bilateral[0]:null;
+function resolveNetworkNode(term){return resolveNetworkNodes(term)[0]||null;}
+const cognitiveStructureAliases={
+ "formación hipocampal":["hippocampus","dentate gyrus","subiculum"],
+ "corteza entorrinal y parahipocampal":["parahippocampal gyrus"],
+ "tálamo anterior y núcleos mediales":["anterior nuclei of thalamus","mediodorsal nucleus of thalamus"],
+ "corteza prefrontal":["middle frontal gyrus","superior frontal gyrus","inferior frontal gyrus"],
+ "corteza prefrontal dorsolateral":["middle frontal gyrus","superior frontal gyrus"],
+ "corteza prefrontal medial y orbitofrontal":["medial frontal gyrus","orbital part of inferior frontal gyrus","anterior cingulate gyrus"],
+ "corteza parietal posterior":["superior parietal lobule","inferior parietal lobule","precuneus"],
+ "corteza premotora":["precentral gyrus","middle frontal gyrus"],
+ "red perisilviana izquierda":["inferior frontal gyrus","superior temporal gyrus","supramarginal gyrus"],
+ "giro frontal inferior":["inferior frontal gyrus"],
+ "regiones temporales superiores y medias":["superior temporal gyrus","middle temporal gyrus"],
+ "fascículo arqueado y longitudinal superior":["arcuate fasciculus","superior longitudinal fascicle"],
+ "vías occipitoparietales":["superior parietal lobule","inferior parietal lobule","cuneus"],
+ "regiones temporales ventrales":["parahippocampal gyrus","inferior temporal gyrus"],
+ "cerebelo y redes frontoparietales":["cerebellum","middle frontal gyrus","superior parietal lobule"],
+ "unión temporoparietal":["angular gyrus","supramarginal gyrus"],
+ "surco temporal superior":["superior temporal gyrus"],
+ "amígdala e ínsula":["amygdala","insula"],
+ "lóbulos temporales anteriores":["temporal pole","middle temporal gyrus","inferior temporal gyrus"],
+ "regiones parietales según dominio":["inferior parietal lobule","angular gyrus"],
+ "parietal inferior izquierdo":["inferior parietal lobule"],
+ "regiones premotoras":["precentral gyrus","middle frontal gyrus"],
+ "ganglios basales":["caudate nucleus","putamen","globus pallidus internal","globus pallidus external"],
+ "amígdala":["amygdala"],"ínsula":["insula"],"hipocampo":["hippocampus"],
+ "tálamo":["anterior nuclei of thalamus","mediodorsal nucleus of thalamus"]
+};
+function cognitiveTargetsFor(domain){
+ const aliases=[];
+ (domain.structures||[]).forEach(label=>{
+  const entry=Object.entries(cognitiveStructureAliases).find(([key])=>normalise(key)===normalise(label));
+  (entry?entry[1]:[label]).forEach(alias=>aliases.push(alias));
+ });
+ return [...new Set(aliases)];
 }
 
 function resolveNetworkNodes(term){
- const key=normalise(term),aliases=networkNodeAliases[key]||[term],terms=aliases.map(normalise).filter(Boolean);
+ const key=normalise(term),entry=Object.entries(networkNodeAliases).find(([name])=>normalise(name)===key),aliases=entry?entry[1]:[term],terms=aliases.map(normalise).filter(Boolean);
  const matches=[...structures.values()].filter(s=>{const label=normalise(s.label);return terms.some(t=>label===t||(' '+label+' ').includes(' '+t+' '));});
  return [...new Map(matches.map(s=>[s.id,s])).values()];
 }
@@ -770,7 +792,7 @@ function renderCognitiveDomainExplorer(){
   const correlationLinks=correlationsList.map(c=>'<button type="button" class="clinical-related-button" data-correlation-id="'+escapeHtml(c.id)+'">'+escapeHtml(c.name)+'</button>').join('');
   const refs=domain.refs.map(([label,url])=>'<li><a href="'+escapeHtml(url)+'" target="_blank" rel="noopener noreferrer">'+escapeHtml(label)+' ↗</a></li>').join('');
   detail.innerHTML='<p class="network-tag">DOMINIO COGNITIVO</p><h4>'+escapeHtml(domain.name)+'</h4><p class="muted">'+escapeHtml(domain.definition)+'</p><div class="clinical-actions"><button type="button" class="clinical-related-button" id="cognitive-focus">Visualizar componentes en el cerebro 3D</button></div>'+[['Componentes a explorar',domain.components],['Estructuras implicadas',domain.structures.join(' · ')],['Redes funcionales',domain.network],['Manifestaciones y contextos clínicos',domain.clinical],['Consideraciones para la interpretación',domain.interpretation]].map(([heading,value])=>'<section class="network-section"><h5>'+heading+'</h5><p class="muted">'+escapeHtml(value)+'</p></section>').join('')+'<section class="network-section"><h5>Instrumentos relacionados</h5><div class="clinical-actions">'+(testLinks||'<p class="muted">Sin instrumentos vinculados en este catálogo.</p>')+'</div></section><section class="network-section"><h5>Correlaciones anatomoclínicas</h5><div class="clinical-actions">'+(correlationLinks||'<p class="muted">Sin fichas anatómicas vinculadas.</p>')+'</div></section><section class="network-section"><h5>Fuentes y lecturas</h5><ul class="fact-references">'+refs+'</ul></section><p class="correlation-note muted">El dominio no se localiza en una única región. Las tareas reclutan componentes parcialmente superpuestos y su desempeño está modulado por edad, educación, idioma, estado clínico y condiciones sensoriales/motoras.</p>';
-  detail.querySelector('#cognitive-focus')?.addEventListener('click',()=>visualizeAnatomyTargets(domain.structures,domain.name));
+  detail.querySelector('#cognitive-focus')?.addEventListener('click',()=>visualizeAnatomyTargets(cognitiveTargetsFor(domain),domain.name));
   if(visualize)visualizeAnatomyTargets(domain.structures,domain.name);
   detail.querySelectorAll('[data-test-id]').forEach(b=>b.addEventListener('click',()=>{
    const test=neuropsychTests.find(t=>t.id===b.dataset.testId);const input=document.querySelector('#assessment-search');
