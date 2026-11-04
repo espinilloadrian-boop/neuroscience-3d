@@ -45,7 +45,8 @@ export const clinicalCaseLinks = {
   structures:[
    {label:"Giro frontal medio (referencia prefrontal)",aliases:["middle frontal gyrus"]},
    {label:"Corteza somatosensorial",aliases:["postcentral gyrus","primary somatosensory","somatosensory cortex"]},
-   {label:"Giro temporal medio/superior",aliases:["middle temporal gyrus","superior temporal gyrus"]}
+   {label:"Giro temporal medio",aliases:["middle temporal gyrus"]},
+   {label:"Giro temporal superior",aliases:["superior temporal gyrus"]}
   ],
   networkId:"frontostriatal",
   tractId:"slf"
@@ -66,8 +67,9 @@ export const clinicalCaseLinks = {
   structures:[
    {label:"Giro frontal medio (referencia prefrontal)",aliases:["middle frontal gyrus"]},
    {label:"Complejo basolateral amigdalino",aliases:["basolateral complex"]},
-   {label:"Giro temporal medio/superior",aliases:["middle temporal gyrus","superior temporal gyrus"]},
-   {label:"Ínsula",aliases:["insula","ínsula"]}
+   {label:"Giro temporal medio",aliases:["middle temporal gyrus"]},
+   {label:"Giro temporal superior",aliases:["superior temporal gyrus"]},
+   {label:"Ínsula (región subcentral)",aliases:["insula subcentral gyrus and ant and post sulci"]}
   ],
   networkId:"salience",
   tractId:"uncinate"
