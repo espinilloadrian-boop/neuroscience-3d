@@ -29,6 +29,6 @@ export function resolveAnatomyTarget(items, aliases = []) {
     }
     if (Number.isFinite(score)) ranked.push({ item, score });
   }
-  ranked.sort((a, b) => a.score - b.score || (a.item.side === 'left' ? -1 : b.item.side === 'left' ? 1 : 0));
+  ranked.sort((a, b) => a.score - b.score || Number(a.item.side !== 'left') - Number(b.item.side !== 'left'));
   return ranked[0]?.item ?? null;
 }
