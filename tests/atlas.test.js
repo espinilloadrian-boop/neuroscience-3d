@@ -10,6 +10,7 @@ import { neuropsychTests } from '../src/neuropsych-tests.js';
 import { tracts } from '../src/tracts.js';
 import { findAnatomyIntegration } from '../src/anatomy-integration.js';
 import { findStructureFact } from '../src/structure-facts.js';
+import { normalizeAnatomyLabel, resolveAnatomyTarget } from '../src/anatomy-resolver.js';
 import { researchLab } from '../src/research-lab.js';
 import { parseCSV, normalizeResearchRows, summarizeResearch, pearson, pairwiseAuc } from '../src/research-analysis.js';
 
@@ -130,4 +131,17 @@ test('cada escenario clínico tiene una guía de lectura multimodal completa', (
 test('las fichas anatómicas reconocen nombres con y sin acentos', () => {
   assert.equal(findStructureFact('tálamo')?.title, 'Tálamo');
   assert.equal(findStructureFact('talamo')?.title, 'Tálamo');
+});
+
+
+test('el resolvedor anatómico prioriza el nombre de malla sobre región y jerarquía', () => {
+  const items = [
+    { label: 'Corteza cerebral', region: 'Telencephalon', ta2: ['Brain', 'Cerebrum'], side: 'left' },
+    { label: 'Hippocampus proper', region: 'Temporal lobe', ta2: ['Brain', 'Hippocampus'], side: 'right' },
+    { label: 'Hippocampus proper', region: 'Temporal lobe', ta2: ['Brain', 'Hippocampus'], side: 'left' }
+  ];
+  assert.equal(normalizeAnatomyLabel('Ínsula — izquierda'), 'insula izquierda');
+  assert.equal(resolveAnatomyTarget(items, ['hipocampo'])?.side, 'left');
+  assert.equal(resolveAnatomyTarget(items, ['corteza cerebral'])?.label, 'Corteza cerebral');
+  assert.equal(resolveAnatomyTarget(items, ['estructura inexistente']), null);
 });
