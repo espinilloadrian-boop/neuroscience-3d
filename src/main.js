@@ -362,7 +362,12 @@ function visualizeAnatomyTargets(terms,caption='Red anatómica',mode='network',e
    const marker=new THREE.Mesh(new THREE.SphereGeometry(THREE.MathUtils.clamp((sphere.radius||0.12)*0.13,0.035,0.085),16,12),new THREE.MeshBasicMaterial({color:0x6bd4f2,depthTest:false,transparent:true,opacity:0.98}));
    marker.position.copy(center);marker.renderOrder=20;functionalOverlay.add(marker);
   });
-  centersByNode.set(label,centers);
+  const grouped=new Map();
+  centers.forEach(item=>{
+   const key=item.side||'median',entry=grouped.get(key)||{side:key,center:new THREE.Vector3(),count:0};
+   entry.center.add(item.center);entry.count++;grouped.set(key,entry);
+  });
+  centersByNode.set(label,[...grouped.values()].map(item=>({side:item.side,center:item.center.multiplyScalar(1/item.count)})));
  }
  let drawnEdges=0;
  (edges||[]).forEach(([from,to])=>{
