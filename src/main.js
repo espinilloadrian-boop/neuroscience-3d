@@ -299,6 +299,52 @@ function resolveNetworkNode(term){
  const bilateral=partial.filter(s=>s.side==='left'||s.side==='right');
  return bilateral.length?bilateral[0]:null;
 }
+
+function resolveNetworkNodes(term){
+ const key=normalise(term),aliases=networkNodeAliases[key]||[term],terms=aliases.map(normalise).filter(Boolean);
+ const matches=[...structures.values()].filter(s=>{const label=normalise(s.label);return terms.some(t=>label===t||(' '+label+' ').includes(' '+t+' '));});
+ return [...new Map(matches.map(s=>[s.id,s])).values()];
+}
+function resolveClinicalNodes(aliases){
+ const terms=(aliases||[]).map(normalise).filter(Boolean);
+ const matches=[...structures.values()].filter(s=>{const label=normalise(s.label);return terms.some(t=>label===t||(' '+label+' ').includes(' '+t+' '));});
+ return [...new Map(matches.map(s=>[s.id,s])).values()];
+}
+const functionalOverlay=new THREE.Group();functionalOverlay.name='functional-network-overlay';scene.add(functionalOverlay);
+function clearFunctionalOverlay(){
+ functionalOverlay.traverse(o=>{if(o.geometry)o.geometry.dispose();if(o.material){if(Array.isArray(o.material))o.material.forEach(m=>m.dispose());else o.material.dispose();}});
+ functionalOverlay.clear();
+}
+function visualizeAnatomyTargets(terms,caption='Red anatómica',mode='network'){
+ const resolved=[];
+ (terms||[]).forEach(term=>{
+  const found=mode==='clinical'&&Array.isArray(term.aliases)?resolveClinicalNodes(term.aliases):resolveNetworkNodes(typeof term==='string'?term:term.label);
+  found.forEach(s=>{if(!resolved.some(x=>x.id===s.id))resolved.push(s);});
+ });
+ clearFunctionalOverlay();meshes.forEach(m=>{m.material.emissive.setHex(0x000000);m.material.emissiveIntensity=0;});
+ if(!resolved.length)return {resolved:[],missing:(terms||[]).length};
+ isolateSelected=false;selectedId=null;
+ const isolateButton=document.querySelector('#isolate-structure');isolateButton?.classList.remove('active');isolateButton?.setAttribute('aria-pressed','false');
+ resolved.forEach(s=>{if(layerEnabled.get(s.category)===false)layerEnabled.set(s.category,true);s.meshes.forEach(m=>{applyVisibility(m);m.material.emissive.setHex(0x287fa8);m.material.emissiveIntensity=0.72;});});
+ renderLayerControls();
+ const points=[],allBounds=new THREE.Box3();
+ resolved.forEach(s=>{
+  const bounds=new THREE.Box3();s.meshes.forEach(m=>bounds.expandByObject(m));if(bounds.isEmpty())return;
+  allBounds.union(bounds);const center=bounds.getCenter(new THREE.Vector3()),sphere=bounds.getBoundingSphere(new THREE.Sphere());
+  points.push({center,radius:sphere.radius||0.12});
+  const marker=new THREE.Mesh(new THREE.SphereGeometry(THREE.MathUtils.clamp((sphere.radius||0.12)*0.13,0.035,0.085),16,12),new THREE.MeshBasicMaterial({color:0x6bd4f2,depthTest:false,transparent:true,opacity:0.95}));
+  marker.position.copy(center);marker.renderOrder=20;functionalOverlay.add(marker);
+ });
+ for(let i=1;i<points.length;i++){const geometry=new THREE.BufferGeometry().setFromPoints([points[i-1].center,points[i].center]);const line=new THREE.Line(geometry,new THREE.LineBasicMaterial({color:0x62c5e8,transparent:true,opacity:0.72,depthTest:false}));line.renderOrder=19;functionalOverlay.add(line);}
+ if(!allBounds.isEmpty()){
+  const center=allBounds.getCenter(new THREE.Vector3()),sphere=allBounds.getBoundingSphere(new THREE.Sphere()),direction=camera.position.clone().sub(controls.target);
+  if(direction.lengthSq()<1e-8)direction.set(0,0,1);direction.normalize();
+  const distance=THREE.MathUtils.clamp((sphere.radius||1)*2.8,3.2,12);
+  controls.target.copy(center);camera.position.copy(center).addScaledVector(direction,distance);camera.near=Math.max(0.005,distance/1000);camera.far=Math.max(200,distance*30);camera.updateProjectionMatrix();controls.autoRotate=false;controls.update();
+ }
+ return {resolved,missing:Math.max(0,(terms||[]).length-resolved.length)};
+}
+
 function renderNetworkExplorer(){
  const host=document.querySelector('#network-list');
  const detail=document.querySelector('#network-detail');
@@ -308,11 +354,11 @@ function renderNetworkExplorer(){
   const button=document.createElement('button');
   button.type='button';button.className='network-choice'+(index===0?' active':'');button.dataset.networkId=network.id;
   button.innerHTML='<strong>'+escapeHtml(network.name)+'</strong><small>'+escapeHtml(network.tag)+'</small>';
-  button.addEventListener('click',()=>showNetwork(network,button));
+  button.addEventListener('click',()=>showNetwork(network,button,true));
   host.appendChild(button);
  });
- showNetwork(networks[0],host.querySelector('button'));
- function showNetwork(network,button){
+ showNetwork(networks[0],host.querySelector('button'),false);
+ function showNetwork(network,button,visualize=true){
   host.querySelectorAll('button').forEach(b=>b.classList.toggle('active',b===button));
   const refs=network.refs.map(([label,url])=>'<li><a href="'+escapeHtml(url)+'" target="_blank" rel="noopener noreferrer">'+escapeHtml(label)+' ↗</a></li>').join('');
   const nodes=network.nodes.map(node=>{
@@ -322,9 +368,10 @@ function renderNetworkExplorer(){
   detail.innerHTML='<p class="network-tag">'+escapeHtml(network.tag)+'</p><h4>'+escapeHtml(network.name)+'</h4><p class="muted">'+escapeHtml(network.summary)+'</p><section class="network-section"><h5>Cómo leer este circuito</h5><p class="muted">El recorrido es un esquema funcional basado en bibliografía, no una reconstrucción de conexiones individuales. Solo se habilitan nodos con una correspondencia anatómica suficientemente específica en el atlas; un nodo deshabilitado no cuenta con una malla independiente identificable.</p></section><section class="network-section"><h5>Recorrido esquemático</h5><p class="muted">'+escapeHtml(network.route)+'</p></section><section class="network-section"><h5>Estructuras relacionadas</h5><div class="network-nodes">'+nodes+'</div></section><section class="network-section"><h5>Funciones</h5><p class="muted">'+escapeHtml(network.function)+'</p></section><section class="network-section"><h5>Correlatos clínicos</h5><p class="muted">'+escapeHtml(network.clinical)+'</p></section><section class="network-section"><h5>Alcance y límites</h5><p class="muted">'+escapeHtml(network.caveat)+'</p></section><section class="network-section"><h5>Bibliografía</h5><ul class="fact-references">'+refs+'</ul></section>';
   detail.querySelectorAll('[data-node]:not(:disabled)').forEach(nodeButton=>nodeButton.addEventListener('click',()=>{
    const term=nodeButton.dataset.node;
-   const found=resolveNetworkNode(term);
-   if(found){searchInput.value=term;renderSearch(term);controls.autoRotate=false;selectStructure(found);}
+   const found=resolveNetworkNodes(term);
+   if(found.length){searchInput.value=term;renderSearch(term);controls.autoRotate=false;visualizeAnatomyTargets([term],term);}
   }));
+  if(visualize)visualizeAnatomyTargets(network.nodes,network.name);
  }
 }
 
@@ -342,9 +389,9 @@ function renderTractExplorer(){
  tracts.forEach((tract,index)=>{
   const b=document.createElement('button');b.type='button';b.className='network-choice'+(index===0?' active':'');b.dataset.tractId=tract.id;
   b.innerHTML='<strong>'+escapeHtml(tract.name)+'</strong><small>'+escapeHtml(tract.type)+'</small>';
-  b.addEventListener('click',()=>show(tract,b));host.appendChild(b);
+  b.addEventListener('click',()=>show(tract,b,true));host.appendChild(b);
  });
- function show(tract,button){
+ function show(tract,button,visualize=true){
   host.querySelectorAll('button').forEach(b=>b.classList.toggle('active',b===button));
   const refs=tract.refs.map(([label,url])=>'<li><a href="'+escapeHtml(url)+'" target="_blank" rel="noopener noreferrer">'+escapeHtml(label)+' ↗</a></li>').join('');
   detail.innerHTML='<p class="network-tag">'+escapeHtml(tract.type)+'</p><h4>'+escapeHtml(tract.name)+'</h4>'+[['Origen',tract.origin],['Trayecto anatómico',tract.course],['Terminaciones y conexiones',tract.termination],['Funciones asociadas',tract.function],['Relevancia clínica',tract.clinical],['Evaluación por neuroimagen',tract.imaging],['Límites de interpretación',tract.caveat]].map(([h,p])=>'<section class="network-section"><h5>'+h+'</h5><p class="muted">'+escapeHtml(p)+'</p></section>').join('')+'<section class="network-section"><h5>Bibliografía</h5><ul class="fact-references">'+refs+'</ul></section>';
@@ -356,13 +403,14 @@ function renderTractExplorer(){
    const nodes=document.createElement('div');nodes.className='network-nodes';
    endpointTerms.forEach(term=>{
     const found=resolveNetworkNode(term),node=document.createElement('button');node.type='button';node.className='network-node';node.textContent=term+(found?'':' · sin malla identificable');node.disabled=!found;
-    if(found)node.addEventListener('click',()=>{controls.autoRotate=false;selectStructure(found);});
+    if(found)node.addEventListener('click',()=>{controls.autoRotate=false;visualizeAnatomyTargets([term],term);});
     nodes.appendChild(node);
    });
    section.appendChild(nodes);detail.appendChild(section);
   }
+  if(visualize)visualizeAnatomyTargets(endpointTerms,tract.name);
  }
- show(tracts[0],host.querySelector('button'));
+ show(tracts[0],host.querySelector('button'),false);
 }
 
 function renderNeuroimagingExplorer(){
@@ -389,9 +437,9 @@ function renderClinicalCaseExplorer(){
  clinicalCases.forEach((clinicalCase,index)=>{
   const b=document.createElement('button');b.type='button';b.className='network-choice'+(index===0?' active':'');
   b.innerHTML='<strong>'+escapeHtml(clinicalCase.name)+'</strong><small>'+escapeHtml(clinicalCase.domain)+'</small>';
-  b.addEventListener('click',()=>show(clinicalCase,b));host.appendChild(b);
+  b.addEventListener('click',()=>show(clinicalCase,b,true));host.appendChild(b);
  });
- function show(clinicalCase,button){
+ function show(clinicalCase,button,visualize=true){
   host.querySelectorAll('button').forEach(b=>b.classList.toggle('active',b===button));
   const links=clinicalCaseLinks[clinicalCase.id]||{structures:[]};
   const refs=clinicalCase.refs.map(([label,url])=>'<li><a href="'+escapeHtml(url)+'" target="_blank" rel="noopener noreferrer">'+escapeHtml(label)+' ↗</a></li>').join('');
@@ -402,7 +450,7 @@ function renderClinicalCaseExplorer(){
    const found=resolveAnatomyTarget([...structures.values()],target.aliases);
    const status=detail.querySelector('.clinical-focus-status');
    if(found){
-    controls.autoRotate=false;selectStructure(found);searchInput.value=found.label;renderSearch(found.label);
+    controls.autoRotate=false;visualizeAnatomyTargets([target],target.label,'clinical');searchInput.value=found.label;renderSearch(found.label);
     status.textContent='Atlas: se localizó "'+found.label+'". La selección muestra la malla disponible; no implica lesión ni diagnóstico.';
    }else{
     status.textContent='No se encontró una malla identificable para "'+target.label+'" en esta versión del atlas. La estructura se mantiene como referencia anatómica del escenario.';
@@ -416,8 +464,9 @@ function renderClinicalCaseExplorer(){
    if(tractButton){const b=document.createElement('button');b.type='button';b.className='clinical-related-button';b.textContent='Abrir tracto: '+tractButton.querySelector('strong').textContent;b.addEventListener('click',()=>tractButton.click());nav.appendChild(b);}
    detail.querySelector('.clinical-actions').appendChild(nav);
   }
+  if(visualize)visualizeAnatomyTargets(links.structures,clinicalCase.name,'clinical');
  }
- show(clinicalCases[0],host.querySelector('button'));
+ show(clinicalCases[0],host.querySelector('button'),false);
 }
 
 
@@ -711,16 +760,18 @@ function renderCognitiveDomainExplorer(){
  cognitiveDomains.forEach((domain,index)=>{
   const b=document.createElement('button');b.type='button';b.className='network-choice'+(index===0?' active':'');
   b.innerHTML='<strong>'+escapeHtml(domain.name)+'</strong><small>'+escapeHtml(domain.network)+'</small>';
-  b.addEventListener('click',()=>show(domain,b));host.appendChild(b);
+  b.addEventListener('click',()=>show(domain,b,true));host.appendChild(b);
  });
- function show(domain,button){
+ function show(domain,button,visualize=true){
   host.querySelectorAll('button').forEach(b=>b.classList.toggle('active',b===button));
   const tests=domain.tests.map(id=>neuropsychTests.find(t=>t.id===id)).filter(Boolean);
   const testLinks=tests.map(t=>'<button type="button" class="clinical-related-button" data-test-id="'+escapeHtml(t.id)+'">'+escapeHtml(t.name)+'</button>').join('');
   const correlationsList=domain.correlations.map(id=>correlations.find(c=>c.id===id)).filter(Boolean);
   const correlationLinks=correlationsList.map(c=>'<button type="button" class="clinical-related-button" data-correlation-id="'+escapeHtml(c.id)+'">'+escapeHtml(c.name)+'</button>').join('');
   const refs=domain.refs.map(([label,url])=>'<li><a href="'+escapeHtml(url)+'" target="_blank" rel="noopener noreferrer">'+escapeHtml(label)+' ↗</a></li>').join('');
-  detail.innerHTML='<p class="network-tag">DOMINIO COGNITIVO</p><h4>'+escapeHtml(domain.name)+'</h4><p class="muted">'+escapeHtml(domain.definition)+'</p>'+[['Componentes a explorar',domain.components],['Estructuras implicadas',domain.structures.join(' · ')],['Redes funcionales',domain.network],['Manifestaciones y contextos clínicos',domain.clinical],['Consideraciones para la interpretación',domain.interpretation]].map(([heading,value])=>'<section class="network-section"><h5>'+heading+'</h5><p class="muted">'+escapeHtml(value)+'</p></section>').join('')+'<section class="network-section"><h5>Instrumentos relacionados</h5><div class="clinical-actions">'+(testLinks||'<p class="muted">Sin instrumentos vinculados en este catálogo.</p>')+'</div></section><section class="network-section"><h5>Correlaciones anatomoclínicas</h5><div class="clinical-actions">'+(correlationLinks||'<p class="muted">Sin fichas anatómicas vinculadas.</p>')+'</div></section><section class="network-section"><h5>Fuentes y lecturas</h5><ul class="fact-references">'+refs+'</ul></section><p class="correlation-note muted">El dominio no se localiza en una única región. Las tareas reclutan componentes parcialmente superpuestos y su desempeño está modulado por edad, educación, idioma, estado clínico y condiciones sensoriales/motoras.</p>';
+  detail.innerHTML='<p class="network-tag">DOMINIO COGNITIVO</p><h4>'+escapeHtml(domain.name)+'</h4><p class="muted">'+escapeHtml(domain.definition)+'</p><div class="clinical-actions"><button type="button" class="clinical-related-button" id="cognitive-focus">Visualizar componentes en el cerebro 3D</button></div>'+[['Componentes a explorar',domain.components],['Estructuras implicadas',domain.structures.join(' · ')],['Redes funcionales',domain.network],['Manifestaciones y contextos clínicos',domain.clinical],['Consideraciones para la interpretación',domain.interpretation]].map(([heading,value])=>'<section class="network-section"><h5>'+heading+'</h5><p class="muted">'+escapeHtml(value)+'</p></section>').join('')+'<section class="network-section"><h5>Instrumentos relacionados</h5><div class="clinical-actions">'+(testLinks||'<p class="muted">Sin instrumentos vinculados en este catálogo.</p>')+'</div></section><section class="network-section"><h5>Correlaciones anatomoclínicas</h5><div class="clinical-actions">'+(correlationLinks||'<p class="muted">Sin fichas anatómicas vinculadas.</p>')+'</div></section><section class="network-section"><h5>Fuentes y lecturas</h5><ul class="fact-references">'+refs+'</ul></section><p class="correlation-note muted">El dominio no se localiza en una única región. Las tareas reclutan componentes parcialmente superpuestos y su desempeño está modulado por edad, educación, idioma, estado clínico y condiciones sensoriales/motoras.</p>';
+  detail.querySelector('#cognitive-focus')?.addEventListener('click',()=>visualizeAnatomyTargets(domain.structures,domain.name));
+  if(visualize)visualizeAnatomyTargets(domain.structures,domain.name);
   detail.querySelectorAll('[data-test-id]').forEach(b=>b.addEventListener('click',()=>{
    const test=neuropsychTests.find(t=>t.id===b.dataset.testId);const input=document.querySelector('#assessment-search');
    if(input){input.value=test?.name||'';input.dispatchEvent(new Event('input',{bubbles:true}));}
@@ -732,7 +783,7 @@ function renderCognitiveDomainExplorer(){
    target?.click();document.querySelector('#correlation-detail')?.scrollIntoView({behavior:'smooth',block:'nearest'});
   }));
  }
- show(cognitiveDomains[0],host.querySelector('button'));
+ show(cognitiveDomains[0],host.querySelector('button'),false);
 }
 
 
