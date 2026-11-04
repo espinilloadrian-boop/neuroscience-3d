@@ -30,4 +30,24 @@ export const clinicalReading = {
   ["Qué contrastar en neuropsicología","Historia evolutiva, lenguaje, atención, aprendizaje, funciones ejecutivas, comunicación social y conducta adaptativa en distintos contextos."],
   ["Qué no permite concluir","La RM, fMRI o DTI no confirma ni descarta por sí sola TEA, TDAH o un trastorno específico del aprendizaje."]
  ]
+
+ ,
+ vci: [
+  ["Hallazgo de imagen","Infartos estratégicos o múltiples, lagunas, hiperintensidades de sustancia blanca y microhemorragias en SWI/GRE."],
+  ["Hipótesis anatómico-funcional","Posible desconexión frontosubcortical, tálamo-cortical o de redes de asociación; ponderar localización, carga lesional y reserva cognitiva."],
+  ["Qué contrastar en neuropsicología","Velocidad de procesamiento, atención, funciones ejecutivas, memoria, lenguaje, visuoconstrucción y cambio funcional respecto del nivel previo."],
+  ["Qué no permite concluir","La carga de hiperintensidades no establece por sí sola demencia vascular ni causalidad. Considerar copatología neurodegenerativa y factores sistémicos."]
+ ],
+ bvftd: [
+  ["Hallazgo de imagen","Atrofia frontal y temporal anterior, a menudo asimétrica; FDG-PET puede mostrar hipometabolismo frontotemporal en casos seleccionados."],
+  ["Hipótesis anatómico-funcional","Compromiso de redes de saliencia, cognición social y control frontoinsular; las conexiones temporofrontales pueden contribuir al fenotipo."],
+  ["Qué contrastar en neuropsicología","Cambio longitudinal de personalidad, empatía, inhibición, flexibilidad, conducta alimentaria, cognición social, lenguaje y autonomía; incluir informante."],
+  ["Qué no permite concluir","Un perfil ejecutivo o conductual aislado y una imagen inespecífica no confirman bvFTD. El diagnóstico diferencial psiquiátrico y neurológico es central."]
+ ],
+ "pd-cognition": [
+  ["Hallazgo de imagen","La RM convencional suele ser inespecífica; DAT-SPECT puede apoyar una pregunta dopaminérgica seleccionada, pero no estadifica cognición."],
+  ["Hipótesis anatómico-funcional","Los circuitos frontoestriatales y frontoparietales pueden relacionarse con enlentecimiento, atención y funciones ejecutivas; algunos fenotipos comprometen redes posteriores."],
+  ["Qué contrastar en neuropsicología","Atención, velocidad, flexibilidad, fluencia verbal, memoria de recuperación y visuoespacialidad; documentar estado ON/OFF, sueño, ánimo y demandas motoras."],
+  ["Qué no permite concluir","No atribuir lentitud motora a déficit cognitivo sin controlar la respuesta. Distinguir deterioro leve y mayor por impacto en autonomía."]
+ ]
 };

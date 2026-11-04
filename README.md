@@ -1,93 +1,75 @@
 # Neuroscience 3D
 
-Atlas cerebral 3D interactivo para formación, neuropsicología e investigación.
+Atlas neurocientífico interactivo para formación, neuropsicología e investigación. Combina un visor anatómico 3D con módulos de conectividad, neurofisiología, neuroimagen, cognición, clínica y análisis de datos.
 
-## Estado
+## Estado del desarrollo
 
-**Prototipo Fase 1 — visor anatómico con modelo 3D real de origen abierto.**
+La rama de trabajo actual amplía el prototipo publicado. Los cambios descritos aquí están en revisión y no deben confundirse con la versión pública hasta que se integren y desplieguen.
 
-La aplicación incorpora:
-- Modelo cerebral GLB de Z-Anatomy / BodyParts3D cargado en el navegador.
-- Estructuras individualizadas y selección directa sobre la malla.
-- Búsqueda por nombre anatómico, región y categoría.
-- Filtros para mostrar u ocultar sistemas anatómicos completos.
-- Visualización del hemisferio izquierdo, derecho o ambos.
-- Identificación de lateralidad y sistema anatómico a partir de metadatos del modelo.
-- Fichas anatómicas curadas iniciales para hipocampo, tálamo, complejo amigdalino, cerebelo, corteza prefrontal, ganglios basales, corteza motora primaria, corteza somatosensorial primaria y cuerpo calloso: ubicación, organización, conectividad, funciones, correlatos clínicos, límites de interpretación y referencias externas.
-- Separación entre metadatos del atlas y contenido científico curado; las estructuras sin ficha verificada no reciben descripciones funcionales inferidas.
-- Rotación, zoom, restablecimiento de cámara y navegación rápida.
-- Planos de recorte axial, coronal y sagital con deslizador.
-- Exploradores de redes funcionales y tractos de sustancia blanca con límites de interpretación.
-- Nueve modalidades de neuroimagen con principios, aplicaciones, usos clínicos y bibliografía.
-- Cinco escenarios clínicos que relacionan neuroimagen, anatomía, redes y perfiles cognitivos.
-- Laboratorio de correlación anatomoclínica: ocho estructuras con funciones, manifestaciones, ejemplos de pruebas neuropsicológicas, neuroimagen pertinente, límites y fuentes.
-- Explorador de instrumentos neuropsicológicos: ACE-III/ACE-R, MoCA, MMSE, RAVLT, FCSRT, Figura de Rey, TMT, Stroop, FAB, IFS, fluencia verbal, Boston Naming, NPI, FAQ e Índice de Barthel.
-- Advertencias de adaptación, normas locales, licencias y límites interpretativos; incluye referencia a datos normativos de Buenos Aires publicados en 2026 para RAVLT, TMT y fluencia verbal.
-- Laboratorio metodológico de fluencia verbal semántica: diseño comparativo control/DCL/Alzheimer, frecuencia léxica, similitud vectorial, clustering/switching, latencias, educación, análisis estadístico y reproducibilidad. No contiene datos ni resultados simulados.
-- Explorador de microanatomía y neurofisiología: capas corticales, neuronas piramidales, interneuronas, astrocitos, oligodendrocitos, microglía, sinapsis, potencial de acción, plasticidad y neurotransmisores.
-- Explorador de dominios cognitivos: memoria episódica y de trabajo, atención, funciones ejecutivas, lenguaje, habilidades visuoespaciales, cognición social, emoción, memoria semántica y praxias; enlaza fichas de evaluación y correlación anatómica.
-- Explorador de neuroquímica y farmacología: sistemas glutamatérgico, GABAérgico, dopaminérgico, serotoninérgico, noradrenérgico, colinérgico, opioide, endocannabinoide, histamina/orexina y principios de farmacodinamia.
-- Laboratorio de neurofisiología: gradientes y potencial de membrana, canales iónicos, potencial de acción, integración sináptica, liberación vesicular, plasticidad, oscilaciones, EEG, sueño y acoplamiento neurovascular.
-- Simuladores interactivos didácticos: excitabilidad neuronal simplificada, ocupación receptorial y plasticidad dependiente de señal de calcio. No son modelos biofísicos validados ni herramientas clínicas.
-- Explorador de farmacología clínica: antidepresivos, antipsicóticos, benzodiacepinas, antiseizure, tratamientos sintomáticos en Alzheimer, memantina, Parkinson, TDAH, opioides y cannabinoides; mecanismos, circuitos, riesgos y guías.
-- Navegación desde escenarios clínicos y fichas de correlación hacia las estructuras disponibles en el atlas 3D.
-- Interfaz adaptable a escritorio, tablet y móvil.
+### Visor anatómico 3D
+- Modelo GLB externo de Z-Anatomy / BodyParts3D integrado por Brain Project.
+- Manifiesto TA2 de la versión fijada: 437 registros anatómicos en 12 categorías. El número de estructuras que se muestra en pantalla corresponde a las mallas identificadas durante la carga; no se presupone que todos los registros tengan una malla independiente.
+- Selección de mallas, búsqueda por nombre, lateralidad, filtros por categoría, aislamiento de estructura, rotación, zoom y planos geométricos de recorte.
+- Fallback 3D local simplificado si el modelo externo no puede descargarse. El fallback conserva la visualización, pero no permite seleccionar estructuras individuales.
+- La disponibilidad de una ficha anatómica o de una correspondencia con redes depende de la identificación verificable de la malla.
 
-## Modelo anatómico y atribución
+### Integración anatómica y funcional
+- 27 integraciones anatomo-funcionales relacionan estructuras seleccionadas con neurofisiología, funciones cognitivas/conductuales, redes y relevancia clínica.
+- 11 fichas anatómicas complementarias desarrollan ubicación, límites, conectividad, función, correlatos clínicos, limitaciones y referencias; incluyen ínsula y núcleo caudado.
+- Explorador de 10 tractos con origen, trayecto, terminaciones, función, relevancia clínica, neuroimagen y límites metodológicos.
+- Explorador de 8 redes funcionales con nodos anatómicos resaltados en conjunto y conexiones esquemáticas definidas explícitamente por circuito; las estructuras ausentes del modelo se identifican como no segmentadas y no se dibujan conexiones que dependan de ellas.
+- Las descripciones funcionales representan contribuciones a circuitos distribuidos; no implican localización exclusiva ni causalidad automática.
 
-El modelo 3D se carga desde el repositorio público de [Brain Project](https://github.com/itayinbarr/brainproject), que integra activos de **Z-Anatomy / BodyParts3D / DBCLS** y estructuras adicionales registradas desde atlas de neuroimagen abiertos.
+### Neurociencia clínica y evaluación
+- 8 escenarios clínicos: enfermedad de Alzheimer/DCL, epilepsia temporal, ACV isquémico, traumatismo encefalocraneano, trastornos del neurodesarrollo, deterioro cognitivo vascular, variante conductual de demencia frontotemporal y Parkinson.
+- Cada escenario incluye conexiones anatómicas, red funcional, tracto y una guía de lectura multimodal con límites de inferencia.
+- Catálogo de 18 instrumentos y recursos de evaluación neuropsicológica. Se describen constructos, usos y cautelas; no se reproducen materiales protegidos, claves ni baremos.
+- Exploradores de dominios cognitivos, neuroimagen, microanatomía, neurofisiología, neurotransmisión, farmacología clínica y simulaciones didácticas.
 
-- Repositorio de origen: https://github.com/itayinbarr/brainproject
-- Modelo utilizado: `brain-atlas/models/brain.glb`
-- Manifiesto anatómico: `brain-atlas/models/manifest.json`
-- Licencia de activos 3D y metadatos: **CC BY-SA 4.0**, según la documentación del proyecto de origen.
-- Código del visor de origen: Apache License 2.0.
+### Investigación
+- Laboratorio metodológico de fluencia verbal semántica: frecuencia léxica, similitud semántica, clustering/switching, latencias, edad y educación.
+- Importación y validación de CSV, estadística descriptiva y funciones exploratorias de asociación y discriminación.
+- El procesamiento del CSV ocurre localmente en el navegador. No se incorporan datos ni resultados simulados como si fueran observaciones reales.
+- Los análisis son exploratorios: requieren revisión del diseño, supuestos, calidad de datos, control de confusores y validación independiente antes de cualquier inferencia científica.
 
-Este proyecto no redistribuye el archivo GLB: lo carga desde la URL pública del repositorio de origen. Se conserva la atribución y se debe mantener la referencia a la licencia del activo. Si en el futuro se incorpora una copia local o se modifica el modelo, habrá que incluir las atribuciones y cumplir la condición ShareAlike CC BY-SA 4.0.
+## Modelo anatómico, atribución y límites
 
-## Resolución y límites anatómicos
+El modelo se carga desde [Brain Project](https://github.com/itayinbarr/brainproject), que integra activos de Z-Anatomy / BodyParts3D / DBCLS y estructuras adicionales registradas desde atlas de neuroimagen abiertos.
 
-El modelo ofrece anatomía macroscópica segmentada con estructuras identificadas. Los núcleos profundos, zonas hipotalámicas y tractos de sustancia blanca incorporados por registro de atlas de imagen en espacio MNI son aproximados (alrededor de 7 mm, según el proyecto de origen). No son representaciones de resolución histológica ni deben utilizarse para diagnóstico, planificación quirúrgica o mediciones clínicas.
+- Modelo: `brain-atlas/models/brain.glb`
+- Manifiesto: `brain-atlas/models/manifest.json`
+- Activos 3D y metadatos: CC BY-SA 4.0, según la documentación del proyecto de origen.
+- Visor de origen: Apache License 2.0.
 
-Los cortes axial, coronal y sagital de esta versión son planos geométricos de recorte de la malla 3D. No equivalen a imágenes de RM, segmentaciones volumétricas nativas ni reconstrucciones histológicas.
+Se conserva la atribución al proyecto de origen. Si se redistribuye o modifica el activo 3D, deben respetarse la atribución y las condiciones ShareAlike de CC BY-SA 4.0.
 
-Las fichas funcionales y clínicas se incorporan de forma progresiva y solo para estructuras cuya correspondencia anatómica haya sido revisada. La versión actual incluye fichas iniciales de hipocampo, tálamo, complejo amigdalino, cerebelo y corteza prefrontal; no debe extrapolarse su contenido a otras estructuras. No se infieren funciones, conectividad o relaciones causales únicamente a partir de su geometría.
+La segmentación es principalmente macroscópica. Algunos núcleos profundos, regiones hipotalámicas y tractos añadidos por registro de atlas en espacio MNI son aproximados (alrededor de 7 mm, según el proyecto de origen). No equivalen a resolución histológica, segmentación clínica individual ni reconstrucción de tractografía de una persona.
 
-## Ejecutar localmente
+Los planos axial, coronal y sagital de esta versión son planos geométricos de recorte de la malla; no son imágenes de RM ni segmentaciones volumétricas nativas. El atlas es educativo y de investigación; no debe utilizarse para diagnóstico, mediciones clínicas ni planificación quirúrgica.
+
+## Desarrollo y validación
+
+Requisitos: Node.js 22 o compatible y conexión a internet para descargar el modelo GLB y el decodificador Draco.
 
 ```bash
 npm install
 npm run dev
-``
+```
 
-Compilar y previsualizar:
+Compilar, probar y previsualizar:
 
 ```bash
+npm test
 npm run build
 npm run preview
-``
+```
 
-Se requiere conexión a internet para cargar el modelo anatómico externo y el decodificador Draco.
-
-## Hoja de ruta
-
-1. **Atlas anatómico:** completar nombres, jerarquía TA2, lateralidad, límites, referencias y fichas anatómicas.
-2. **Conectividad:** fascículos, vías de asociación/proyección/comisurales y redes funcionales, diferenciando atlas y evidencia.
-3. **Microanatomía:** capas corticales, tipos celulares, glía, neuronas, mielina y sinapsis.
-4. **Neurofisiología:** potencial de acción, neurotransmisores, receptores y plasticidad.
-5. **Neuroimagen:** nueve modalidades con principios de adquisición, aplicaciones y límites de inferencia.
-6. **Integración clínica:** escenarios clínicos, correlación anatomoclínica y navegación vinculada al atlas.
-6. **Neurociencia clínica:** epilepsia, Alzheimer y otras demencias, ACV, TEC y neurodesarrollo.
-7. **Evaluación e investigación:** fichas de instrumentos, variables, análisis estadísticos y módulo de investigación sobre fluencia verbal semántica.
+La integración continua ejecuta pruebas automatizadas y compilación en las ramas configuradas. Estas comprobaciones validan lógica y empaquetado, pero no sustituyen una inspección visual del modelo 3D en un navegador real.
 
 ## Criterio científico
 
-Cada ficha debe diferenciar evidencia consolidada, emergente, hipótesis y controversias. Se documentarán fuentes primarias, DOI/PMID, población, metodología, limitaciones y fecha de revisión. No se presentarán asociaciones anatómico-funcionales como causalidad automática.
-
-Neuroscience 3D es una herramienta educativa y de investigación; no constituye un instrumento diagnóstico.
+Cada módulo debe distinguir evidencia consolidada, evidencia emergente, hipótesis y controversias. Se priorizan fuentes primarias, revisiones académicas, DOI/PMID y guías reconocidas. Las asociaciones anatómico-funcionales se presentan con sus límites, población y método cuando corresponda. La selección, administración, corrección e interpretación de instrumentos requieren formación profesional, normas pertinentes y consideración de licencias.
 
 ## Tecnologías
 
 Vite, JavaScript, Three.js, GLTFLoader y DRACOLoader.
-
-- Laboratorio de datos local para fluencia semántica: importación CSV (separador coma o punto y coma), descriptivos por grupo, correlaciones de Pearson exploratorias y AUC binaria por rangos. El procesamiento ocurre en el navegador; no se transmiten los datos. No reemplaza análisis inferenciales ni validación clínica.

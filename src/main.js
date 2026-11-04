@@ -4,7 +4,10 @@ import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
 import { DRACOLoader } from 'three/addons/loaders/DRACOLoader.js';
 import './style.css';
 import { findStructureFact } from './structure-facts.js';
+import { resolveAnatomyTarget } from './anatomy-resolver.js';
+import { findAnatomyIntegration } from './anatomy-integration.js';
 import { networks } from './networks.js';
+import { resolveNetworkStructures } from './network-mapping.js';
 import { tracts } from './tracts.js';
 import { modalities } from './neuroimaging.js';
 import { clinicalCases } from './clinical-cases.js';
@@ -69,7 +72,7 @@ const buttons=[...document.querySelectorAll('[data-region]')];
 const searchInput=document.querySelector('#structure-search');
 const searchResults=document.querySelector('#search-results');
 
-function normalise(s){return (s||'').toString().normalize('NFD').replace(/[\u0300-\u036f]/g,'').toLowerCase();}
+function normalise(s){return (s||'').toString().normalize('NFD').replace(/[\u0300-\u036f]/g,'').toLowerCase().replace(/[^a-z0-9]+/g,' ').replace(/\s+/g,' ').trim();}
 function readExtras(o){const chain=[];let node=o;while(node){chain.unshift(node.userData||{});node=node.parent;}return Object.assign({},...chain);}
 function buildFallbackBrain(){
  brain.clear();
@@ -200,6 +203,7 @@ function focusStructure(s){
 }
 function selectStructure(s){
  if(!s)return;
+ clearFunctionalOverlay();
  if(layerEnabled.get(s.category)===false){layerEnabled.set(s.category,true);meshes.filter(m=>m.userData.atlasCategory===s.category).forEach(applyVisibility);renderLayerControls();}
  selectedId=s.id;
  if(isolateSelected)meshes.forEach(applyVisibility);
@@ -213,8 +217,10 @@ function selectStructure(s){
  const category=categoryNames[s.category]||s.category;
  const ta2Path=s.ta2.filter(x=>!['Bonus collection','Brain','Central nervous system','Head','Main divisions','Nervous system','Regions of human body','Scene Collection'].includes(x)).slice(-5).join(' › ');
  const fact=findStructureFact(s.label);
+ const integration=findAnatomyIntegration(s.label,s.region);
+ const integrationHtml=integration ? '<div class="panel-divider"></div><p class="eyebrow">INTEGRACIÓN ANATOMOFUNCIONAL</p><h3>'+escapeHtml(integration.title)+'</h3>'+[['Neurofisiología',integration.physiology],['Funciones cognitivas y conductuales',integration.cognition],['Redes y conectividad',integration.networks],['Relevancia clínica',integration.clinical]].map(([heading,value])=>'<section class="fact-section"><h4>'+heading+'</h4><p class="muted">'+escapeHtml(value)+'</p></section>').join('') : '';
  const factHtml=fact ? '<div class="panel-divider"></div><p class="eyebrow">FICHA ANATÓMICA CURADA</p><h3>'+escapeHtml(fact.title)+'</h3><section class="fact-section"><h4>Nivel de representación</h4><p class="muted">La malla seleccionada representa la estructura macroscópica identificada en el atlas. Los subcampos, núcleos o microcircuitos mencionados en esta ficha son explicaciones anatómico-funcionales y no implican que estén segmentados como objetos 3D independientes.</p></section>'+[['Ubicación',fact.location],['Límites y organización',fact.boundaries],['Brodmann',fact.brodmann],['Conectividad',fact.connections],['Funciones neurocognitivas',fact.functions],['Correlatos clínicos',fact.clinical],['Alcance de esta ficha',fact.limitation]].map(([title,value])=>'<section class="fact-section"><h4>'+title+'</h4><p class="muted">'+escapeHtml(value)+'</p></section>').join('')+'<section class="fact-section"><h4>Bibliografía y recursos</h4><ul class="fact-references">'+fact.references.map(ref=>'<li><a href="'+escapeHtml(ref.url)+'" target="_blank" rel="noopener noreferrer">'+escapeHtml(ref.label)+' ↗</a></li>').join('')+'</ul></section>' : '<div class="panel-divider"></div><p class="eyebrow">IDENTIFICACIÓN ANATÓMICA</p><p class="muted">Estructura individual del atlas, vinculada a su malla 3D y metadatos de origen. La ficha científica específica se incorporará cuando se haya verificado la correspondencia anatómica.</p>';
- info.innerHTML='<div class="region-kicker">'+category.toUpperCase()+'</div><h2>'+escapeHtml(s.label)+'</h2><p class="muted">'+escapeHtml(s.region)+' · '+side+'</p><div class="panel-divider"></div><p class="eyebrow">JERARQUÍA ANATÓMICA TA2</p><p class="muted">'+escapeHtml(ta2Path||s.region)+'</p>'+factHtml+'<div class="anatomy-note"><strong>Procedencia del modelo</strong><p>'+escapeHtml(s.source)+'. La resolución y el grado de detalle dependen de la categoría anatómica; consultar las limitaciones del modelo.</p></div>';
+ info.innerHTML='<div class="region-kicker">'+category.toUpperCase()+'</div><h2>'+escapeHtml(s.label)+'</h2><p class="muted">'+escapeHtml(s.region)+' · '+side+'</p><div class="panel-divider"></div><p class="eyebrow">JERARQUÍA ANATÓMICA TA2</p><p class="muted">'+escapeHtml(ta2Path||s.region)+'</p>'+factHtml+integrationHtml+'<div class="anatomy-note"><strong>Procedencia del modelo</strong><p>'+escapeHtml(s.source)+'. La resolución y el grado de detalle dependen de la categoría anatómica; consultar las limitaciones del modelo.</p></div>';
  buttons.forEach(b=>b.classList.toggle('selected',normalise(b.dataset.region)===normalise(s.category)||normalise(b.dataset.region)===normalise(s.region)));
 }
 function escapeHtml(s){return String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));}
@@ -234,44 +240,102 @@ function renderSearch(query){
  });
 }
 
-const networkNodeAliases={
- "corteza prefrontal":["prefrontal cortex","middle frontal gyrus","superior frontal gyrus","orbital part of inferior frontal gyrus"],
- "corteza prefrontal medial":["medial frontal gyrus","anterior cingulate gyrus"],
+function resolveNetworkNode(term){return resolveNetworkNodes(term)[0]||null;}
+const cognitiveStructureAliases={
+ "formación hipocampal":["hippocampus","dentate gyrus","subiculum"],
+ "corteza entorrinal y parahipocampal":["parahippocampal gyrus"],
+ "tálamo anterior y núcleos mediales":["anterior nuclei of thalamus","mediodorsal nucleus of thalamus"],
+ "corteza prefrontal":["middle frontal gyrus","superior frontal gyrus","inferior frontal gyrus"],
  "corteza prefrontal dorsolateral":["middle frontal gyrus","superior frontal gyrus"],
- "corteza prefrontal lateral":["middle frontal gyrus","superior frontal gyrus"],
- "corteza frontal":["middle frontal gyrus","superior frontal gyrus"],
- "corteza parietal posterior":["superior parietal lobule","inferior parietal lobule"],
- "corteza parietal superior":["superior parietal lobule"],
- "corteza parietal inferior":["inferior parietal lobule"],
- "surco intraparietal":["intraparietal sulcus"],
- "cíngulo anterior":["cingulate gyrus and sulcus (middle anterior part)"],
- "cíngulo anterior dorsal":["cingulate gyrus and sulcus (middle anterior part)"],
- "cíngulo posterior":["cingulate gyrus (posterior dorsal part)"],
- "ínsula anterior":["insula (subcentral gyrus and ant. and post. sulci)"],
- "ínsula":["insula (subcentral gyrus and ant. and post. sulci)"],
- "precúneo":["precuneus"],
- "hipocampo":["hippocampus"],
- "globo pálido":["globus pallidus internal","globus pallidus external"],
- "estriado":["caudate nucleus","putamen"],
- "tálamo":["anterior nuclei of thalamus"],
- "hipotálamo":["anterior hypothalamus","lateral hypothalamus","posterior hypothalamus","tuberal hypothalamus"],
- "cerebelo":["cerebellum"],
- "corteza somatosensorial":["postcentral gyrus"],
- "corteza visual":["calcarine sulcus","cuneus"],
- "corteza auditiva":["transverse temporal gyrus"],
- "campos oculares frontales":["frontal eye field"],
- "corteza parahipocampal":["medial occipitotemporal gyrus (parahippocampal)"]
+ "corteza prefrontal medial y orbitofrontal":["medial frontal gyrus","orbital part of inferior frontal gyrus","anterior cingulate gyrus"],
+ "corteza parietal posterior":["superior parietal lobule","inferior parietal lobule","precuneus"],
+ "corteza premotora":["precentral gyrus","middle frontal gyrus"],
+ "red perisilviana izquierda":["inferior frontal gyrus","superior temporal gyrus","supramarginal gyrus"],
+ "giro frontal inferior":["inferior frontal gyrus"],
+ "regiones temporales superiores y medias":["superior temporal gyrus","middle temporal gyrus"],
+ "fascículo arqueado y longitudinal superior":["arcuate fasciculus","superior longitudinal fascicle"],
+ "vías occipitoparietales":["superior parietal lobule","inferior parietal lobule","cuneus"],
+ "regiones temporales ventrales":["parahippocampal gyrus","inferior temporal gyrus"],
+ "cerebelo y redes frontoparietales":["cerebellum","middle frontal gyrus","superior parietal lobule"],
+ "unión temporoparietal":["angular gyrus","supramarginal gyrus"],
+ "surco temporal superior":["superior temporal gyrus"],
+ "amígdala e ínsula":["amygdala","insula"],
+ "lóbulos temporales anteriores":["temporal pole","middle temporal gyrus","inferior temporal gyrus"],
+ "regiones parietales según dominio":["inferior parietal lobule","angular gyrus"],
+ "parietal inferior izquierdo":["inferior parietal lobule"],
+ "regiones premotoras":["precentral gyrus","middle frontal gyrus"],
+ "ganglios basales":["caudate nucleus","putamen","globus pallidus internal","globus pallidus external"],
+ "amígdala":["amygdala"],"ínsula":["insula"],"hipocampo":["hippocampus"],
+ "tálamo":["anterior nuclei of thalamus","mediodorsal nucleus of thalamus"]
 };
-function resolveNetworkNode(term){
- const key=normalise(term);
- const aliases=networkNodeAliases[key]||[];
- const all=[...structures.values()];
- const exact=all.filter(s=>normalise(s.label)===key);
- const candidates=exact.length?exact:all.filter(s=>aliases.some(alias=>normalise(s.label)===normalise(alias)));
- if(!candidates.length)return null;
- const bilateral=candidates.filter(s=>s.side==='left'||s.side==='right');
- return bilateral.length?bilateral[0]:candidates[0];
+function cognitiveTargetsFor(domain){
+ const aliases=[];
+ (domain.structures||[]).forEach(label=>{
+  const entry=Object.entries(cognitiveStructureAliases).find(([key])=>normalise(key)===normalise(label));
+  (entry?entry[1]:[label]).forEach(alias=>aliases.push(alias));
+ });
+ return [...new Set(aliases)];
 }
+
+function resolveNetworkNodes(term){return resolveNetworkStructures(term,structures);}
+function resolveClinicalNodes(aliases){
+ const terms=(aliases||[]).map(normalise).filter(Boolean);
+ const matches=[...structures.values()].filter(s=>{const label=normalise(s.label);return terms.some(t=>label===t||(' '+label+' ').includes(' '+t+' '));});
+ return [...new Map(matches.map(s=>[s.id,s])).values()];
+}
+const functionalOverlay=new THREE.Group();functionalOverlay.name='functional-network-overlay';scene.add(functionalOverlay);
+function clearFunctionalOverlay(){
+ functionalOverlay.traverse(o=>{if(o.geometry)o.geometry.dispose();if(o.material){if(Array.isArray(o.material))o.material.forEach(m=>m.dispose());else o.material.dispose();}});
+ functionalOverlay.clear();
+}
+function visualizeAnatomyTargets(terms,caption='Red anatómica',mode='network',edges=[]){
+ const resolved=[],nodeGroups=new Map();
+ (terms||[]).forEach(term=>{
+  const label=typeof term==='string'?term:term.label;
+  const found=mode==='clinical'&&Array.isArray(term.aliases)?resolveClinicalNodes(term.aliases):resolveNetworkNodes(label);
+  nodeGroups.set(label,found);found.forEach(s=>{if(!resolved.some(x=>x.id===s.id))resolved.push(s);});
+ });
+ clearFunctionalOverlay();meshes.forEach(m=>{m.material.emissive.setHex(0x000000);m.material.emissiveIntensity=0;});
+ const status=document.querySelector('#network-visual-status')||document.querySelector('#functional-visual-status');
+ const missing=(terms||[]).filter(term=>!(nodeGroups.get(typeof term==='string'?term:term.label)||[]).length).map(term=>typeof term==='string'?term:term.label);
+ if(!resolved.length){if(status)status.textContent='No se encontraron mallas para esta selección en el modelo actual.';return {resolved:[],missing};}
+ isolateSelected=false;selectedId=null;
+ const isolateButton=document.querySelector('#isolate-structure');isolateButton?.classList.remove('active');isolateButton?.setAttribute('aria-pressed','false');
+ resolved.forEach(s=>{if(layerEnabled.get(s.category)===false)layerEnabled.set(s.category,true);s.meshes.forEach(m=>{applyVisibility(m);m.material.emissive.setHex(0x00bfe8);m.material.emissiveIntensity=1.65;});});
+ renderLayerControls();
+ const centersByNode=new Map(),allBounds=new THREE.Box3();
+ for(const [label,group] of nodeGroups){
+  const centers=[];
+  group.forEach(s=>{
+   const bounds=new THREE.Box3();s.meshes.forEach(m=>bounds.expandByObject(m));if(bounds.isEmpty())return;
+   allBounds.union(bounds);const center=bounds.getCenter(new THREE.Vector3()),sphere=bounds.getBoundingSphere(new THREE.Sphere());centers.push({center,side:s.side});
+   const marker=new THREE.Mesh(new THREE.SphereGeometry(THREE.MathUtils.clamp((sphere.radius||0.12)*0.2,0.09,0.16),20,16),new THREE.MeshBasicMaterial({color:0x00e5ff,depthTest:false,transparent:false}));
+   marker.position.copy(center);marker.renderOrder=20;functionalOverlay.add(marker);
+  });
+  const grouped=new Map();
+  centers.forEach(item=>{
+   const key=item.side||'median',entry=grouped.get(key)||{side:key,center:new THREE.Vector3(),count:0};
+   entry.center.add(item.center);entry.count++;grouped.set(key,entry);
+  });
+  centersByNode.set(label,[...grouped.values()].map(item=>({side:item.side,center:item.center.multiplyScalar(1/item.count)})));
+ }
+ let drawnEdges=0;
+ (edges||[]).forEach(([from,to])=>{
+  const left=centersByNode.get(from)||[],right=centersByNode.get(to)||[],pairs=[];
+  left.forEach(a=>{const same=right.filter(b=>a.side!=='median'&&b.side===a.side);if(same.length)same.forEach(b=>pairs.push([a,b]));else if(right.length===1&&right[0].side==='median')pairs.push([a,right[0]]);});
+  if(!pairs.length&&left.length===1&&left[0].side==='median')right.forEach(b=>pairs.push([left[0],b]));
+  pairs.forEach(([a,b])=>{const geometry=new THREE.BufferGeometry().setFromPoints([a.center,b.center]);const line=new THREE.Mesh(new THREE.TubeGeometry(new THREE.LineCurve3(a.center,b.center),24,0.012,8,false),new THREE.MeshBasicMaterial({color:0x00d9ff,transparent:false,depthTest:false}));line.renderOrder=19;functionalOverlay.add(line);drawnEdges++;});
+ });
+ if(!allBounds.isEmpty()){
+  const center=allBounds.getCenter(new THREE.Vector3()),sphere=allBounds.getBoundingSphere(new THREE.Sphere()),direction=camera.position.clone().sub(controls.target);
+  if(direction.lengthSq()<1e-8)direction.set(0,0,1);direction.normalize();
+  const distance=THREE.MathUtils.clamp((sphere.radius||1)*2.8,3.2,12);
+  controls.target.copy(center);camera.position.copy(center).addScaledVector(direction,distance);camera.near=Math.max(0.005,distance/1000);camera.far=Math.max(200,distance*30);camera.updateProjectionMatrix();controls.autoRotate=false;controls.update();
+ }
+ if(status){const missingText=missing.length?' · Sin malla: '+missing.join(', '):'';status.textContent=caption+': '+resolved.length+' estructuras resaltadas'+(drawnEdges?' · '+drawnEdges+' conexiones esquemáticas':' · sin conexiones dibujables en esta selección')+missingText+'. Las conexiones son un esquema anatomo-funcional, no tractografía individual.';}
+ return {resolved,missing,drawnEdges};
+}
+
 function renderNetworkExplorer(){
  const host=document.querySelector('#network-list');
  const detail=document.querySelector('#network-detail');
@@ -281,41 +345,69 @@ function renderNetworkExplorer(){
   const button=document.createElement('button');
   button.type='button';button.className='network-choice'+(index===0?' active':'');button.dataset.networkId=network.id;
   button.innerHTML='<strong>'+escapeHtml(network.name)+'</strong><small>'+escapeHtml(network.tag)+'</small>';
-  button.addEventListener('click',()=>showNetwork(network,button));
+  button.addEventListener('click',()=>showNetwork(network,button,true));
   host.appendChild(button);
  });
- showNetwork(networks[0],host.querySelector('button'));
- function showNetwork(network,button){
+ showNetwork(networks[0],host.querySelector('button'),true);
+ function showNetwork(network,button,visualize=true){
   host.querySelectorAll('button').forEach(b=>b.classList.toggle('active',b===button));
   const refs=network.refs.map(([label,url])=>'<li><a href="'+escapeHtml(url)+'" target="_blank" rel="noopener noreferrer">'+escapeHtml(label)+' ↗</a></li>').join('');
   const nodes=network.nodes.map(node=>{
    const found=resolveNetworkNode(node);
    return '<button type="button" class="network-node" data-node="'+escapeHtml(node)+'" '+(found?'':'disabled aria-disabled="true"')+'>'+escapeHtml(node)+(found?'':' · sin malla específica')+'</button>';
   }).join('');
-  detail.innerHTML='<p class="network-tag">'+escapeHtml(network.tag)+'</p><h4>'+escapeHtml(network.name)+'</h4><p class="muted">'+escapeHtml(network.summary)+'</p><section class="network-section"><h5>Cómo leer este circuito</h5><p class="muted">El recorrido es un esquema funcional basado en bibliografía, no una reconstrucción de conexiones individuales. Solo se habilitan nodos con una correspondencia anatómica suficientemente específica en el atlas; un nodo deshabilitado no cuenta con una malla independiente identificable.</p></section><section class="network-section"><h5>Recorrido esquemático</h5><p class="muted">'+escapeHtml(network.route)+'</p></section><section class="network-section"><h5>Estructuras relacionadas</h5><div class="network-nodes">'+nodes+'</div></section><section class="network-section"><h5>Funciones</h5><p class="muted">'+escapeHtml(network.function)+'</p></section><section class="network-section"><h5>Correlatos clínicos</h5><p class="muted">'+escapeHtml(network.clinical)+'</p></section><section class="network-section"><h5>Alcance y límites</h5><p class="muted">'+escapeHtml(network.caveat)+'</p></section><section class="network-section"><h5>Bibliografía</h5><ul class="fact-references">'+refs+'</ul></section>';
+  detail.innerHTML='<p class="network-tag">'+escapeHtml(network.tag)+'</p><h4>'+escapeHtml(network.name)+'</h4><p class="muted">'+escapeHtml(network.summary)+'</p><section class="network-section"><h5>Cómo leer este circuito</h5><p class="muted">El recorrido es un esquema funcional basado en bibliografía, no una reconstrucción de conexiones individuales. Solo se habilitan nodos con una correspondencia anatómica suficientemente específica en el atlas; un nodo deshabilitado no cuenta con una malla independiente identificable.</p><p class="network-visual-legend"><span class="network-legend-dot"></span> Regiones resaltadas <span class="network-legend-line"></span> Relaciones funcionales esquemáticas</p><p id="network-visual-status" class="clinical-focus-status muted" aria-live="polite">La selección debe producir un cambio visible en el cerebro 3D. Las regiones resaltadas y las líneas representan nodos y relaciones del circuito.</p></section><section class="network-section"><h5>Recorrido esquemático</h5><p class="muted">'+escapeHtml(network.route)+'</p></section><section class="network-section"><h5>Estructuras relacionadas</h5><div class="network-nodes">'+nodes+'</div></section><section class="network-section"><h5>Funciones</h5><p class="muted">'+escapeHtml(network.function)+'</p></section><section class="network-section"><h5>Correlatos clínicos</h5><p class="muted">'+escapeHtml(network.clinical)+'</p></section><section class="network-section"><h5>Alcance y límites</h5><p class="muted">'+escapeHtml(network.caveat)+'</p></section><section class="network-learning" aria-labelledby="network-learning-title"><p class="eyebrow">COMPROBACIÓN DE APRENDIZAJE</p><h5 id="network-learning-title">¿Cuál es la interpretación más adecuada de esta red?</h5><div class="network-learning-options"><button type="button" data-learning-answer="function">'+escapeHtml(network.function)+'</button><button type="button" data-learning-answer="single">Es un centro anatómico único que produce por sí solo todas estas funciones.</button><button type="button" data-learning-answer="diagnosis">Su alteración confirma por sí sola un diagnóstico clínico.</button></div><p class="network-learning-feedback muted" aria-live="polite">Elegí una respuesta para comprobar tu comprensión.</p></section><section class="network-section"><h5>Bibliografía</h5><ul class="fact-references">'+refs+'</ul></section>';
+  detail.querySelectorAll('[data-learning-answer]').forEach(answerButton=>answerButton.addEventListener('click',()=>{
+   const correct=answerButton.dataset.learningAnswer==='function';
+   detail.querySelectorAll('[data-learning-answer]').forEach(option=>{option.classList.toggle('correct',option.dataset.learningAnswer==='function');option.classList.toggle('incorrect',option===answerButton&&!correct);option.disabled=true;});
+   const feedback=detail.querySelector('.network-learning-feedback');
+   feedback.textContent=correct?'Correcto. La red contribuye a estas funciones como sistema distribuido. Recordá que su actividad depende de la tarea y de la interacción con otros circuitos.':'No es correcto. Una red funcional no equivale a un centro único ni permite confirmar un diagnóstico por sí sola. Revisá la función y los límites del circuito y volvé a intentarlo al seleccionar nuevamente la red.';
+  }));
   detail.querySelectorAll('[data-node]:not(:disabled)').forEach(nodeButton=>nodeButton.addEventListener('click',()=>{
    const term=nodeButton.dataset.node;
-   const found=resolveNetworkNode(term);
-   if(found){searchInput.value=term;renderSearch(term);controls.autoRotate=false;selectStructure(found);}
+   const found=resolveNetworkNodes(term);
+   if(found.length){searchInput.value=term;renderSearch(term);controls.autoRotate=false;visualizeAnatomyTargets([term],term);}
   }));
+  if(visualize)visualizeAnatomyTargets(network.nodes,network.name,'network',network.edges||[]);
  }
 }
 
 function renderTractExplorer(){
  const host=document.querySelector('#tract-list'),detail=document.querySelector('#tract-detail');
+ const tractEndpoints={
+  "fornix":["hipocampo","hipotálamo"],"cingulum":["cíngulo anterior","cíngulo posterior","corteza parahipocampal"],
+  "internal-capsule":["tálamo","globo pálido","corteza motora primaria"],"arcuate":["corteza prefrontal","corteza parietal inferior"],
+  "slf":["corteza parietal superior","corteza prefrontal"],"uncinate":["amígdala","corteza prefrontal"],
+  "ifof":["corteza occipital","corteza prefrontal"],"ilf":["corteza visual","corteza parahipocampal"],
+  "corticospinal":["corteza motora primaria","tronco encefálico"],"optic-radiation":["tálamo","corteza visual"]
+ };
  if(!host||!detail)return;
  host.innerHTML='';
  tracts.forEach((tract,index)=>{
   const b=document.createElement('button');b.type='button';b.className='network-choice'+(index===0?' active':'');b.dataset.tractId=tract.id;
   b.innerHTML='<strong>'+escapeHtml(tract.name)+'</strong><small>'+escapeHtml(tract.type)+'</small>';
-  b.addEventListener('click',()=>show(tract,b));host.appendChild(b);
+  b.addEventListener('click',()=>show(tract,b,true));host.appendChild(b);
  });
- function show(tract,button){
+ function show(tract,button,visualize=true){
   host.querySelectorAll('button').forEach(b=>b.classList.toggle('active',b===button));
   const refs=tract.refs.map(([label,url])=>'<li><a href="'+escapeHtml(url)+'" target="_blank" rel="noopener noreferrer">'+escapeHtml(label)+' ↗</a></li>').join('');
   detail.innerHTML='<p class="network-tag">'+escapeHtml(tract.type)+'</p><h4>'+escapeHtml(tract.name)+'</h4>'+[['Origen',tract.origin],['Trayecto anatómico',tract.course],['Terminaciones y conexiones',tract.termination],['Funciones asociadas',tract.function],['Relevancia clínica',tract.clinical],['Evaluación por neuroimagen',tract.imaging],['Límites de interpretación',tract.caveat]].map(([h,p])=>'<section class="network-section"><h5>'+h+'</h5><p class="muted">'+escapeHtml(p)+'</p></section>').join('')+'<section class="network-section"><h5>Bibliografía</h5><ul class="fact-references">'+refs+'</ul></section>';
+  const endpointTerms=tractEndpoints[tract.id]||[];
+  if(endpointTerms.length){
+   const section=document.createElement('section');section.className='network-section';
+   const heading=document.createElement('h5');heading.textContent='Explorar extremos en el cerebro 3D';section.appendChild(heading);
+   const note=document.createElement('p');note.className='muted';note.textContent='Seleccioná un extremo para localizar su estructura en el modelo. El recorrido se describe anatómicamente y no representa tractografía individual.';section.appendChild(note);
+   const nodes=document.createElement('div');nodes.className='network-nodes';
+   endpointTerms.forEach(term=>{
+    const found=resolveNetworkNode(term),node=document.createElement('button');node.type='button';node.className='network-node';node.textContent=term+(found?'':' · sin malla identificable');node.disabled=!found;
+    if(found)node.addEventListener('click',()=>{controls.autoRotate=false;visualizeAnatomyTargets([term],term);});
+    nodes.appendChild(node);
+   });
+   section.appendChild(nodes);detail.appendChild(section);
+  }
+  if(visualize)visualizeAnatomyTargets(endpointTerms,tract.name);
  }
- show(tracts[0],host.querySelector('button'));
+ show(tracts[0],host.querySelector('button'),false);
 }
 
 function renderNeuroimagingExplorer(){
@@ -342,9 +434,9 @@ function renderClinicalCaseExplorer(){
  clinicalCases.forEach((clinicalCase,index)=>{
   const b=document.createElement('button');b.type='button';b.className='network-choice'+(index===0?' active':'');
   b.innerHTML='<strong>'+escapeHtml(clinicalCase.name)+'</strong><small>'+escapeHtml(clinicalCase.domain)+'</small>';
-  b.addEventListener('click',()=>show(clinicalCase,b));host.appendChild(b);
+  b.addEventListener('click',()=>show(clinicalCase,b,true));host.appendChild(b);
  });
- function show(clinicalCase,button){
+ function show(clinicalCase,button,visualize=true){
   host.querySelectorAll('button').forEach(b=>b.classList.toggle('active',b===button));
   const links=clinicalCaseLinks[clinicalCase.id]||{structures:[]};
   const refs=clinicalCase.refs.map(([label,url])=>'<li><a href="'+escapeHtml(url)+'" target="_blank" rel="noopener noreferrer">'+escapeHtml(label)+' ↗</a></li>').join('');
@@ -352,14 +444,10 @@ function renderClinicalCaseExplorer(){
   detail.innerHTML='<p class="network-tag">'+escapeHtml(clinicalCase.domain)+'</p><h4>'+escapeHtml(clinicalCase.name)+'</h4><section class="network-section clinical-actions"><h5>Explorar en el atlas 3D</h5><p class="muted">Seleccioná una estructura para intentar localizar su malla en el atlas. La disponibilidad depende de las estructuras identificadas en el modelo.</p><div class="clinical-targets">'+targets+'</div><p class="clinical-focus-status muted" aria-live="polite">Las asociaciones son orientativas y no representan una lesión individual.</p></section>'+[['Pregunta clínica',clinicalCase.question],['Modalidades relevantes',clinicalCase.modalities],['Hallazgos de imagen posibles',clinicalCase.findings],['Anatomía y redes implicadas',clinicalCase.network],['Perfil cognitivo a explorar',clinicalCase.cognition],['Integración e interpretación',clinicalCase.interpretation],['Límites y precauciones',clinicalCase.caveat]].map(([h,p])=>'<section class="network-section"><h5>'+h+'</h5><p class="muted">'+escapeHtml(p)+'</p></section>').join('')+'<section class="network-section clinical-reading"><h5>Lectura multimodal: del hallazgo a la hipótesis</h5><p class="muted">Secuencia orientativa para integrar neuroimagen y evaluación neuropsicológica sin convertir correlaciones en causalidad individual.</p>'+((clinicalReading[clinicalCase.id]||[]).map(([heading,value])=>'<div class="clinical-reading-row"><h6>'+escapeHtml(heading)+'</h6><p class="muted">'+escapeHtml(value)+'</p></div>').join(''))+'</section><section class="network-section"><h5>Guías y bibliografía</h5><ul class="fact-references">'+refs+'</ul></section>';
   detail.querySelectorAll('[data-target-index]').forEach(targetButton=>targetButton.addEventListener('click',()=>{
    const target=links.structures[Number(targetButton.dataset.targetIndex)];
-   const aliases=target.aliases.map(normalise);
-   const found=[...structures.values()].find(item=>{
-    const label=normalise(item.label),region=normalise(item.region),ta2=normalise(item.ta2.join(' '));
-    return aliases.some(alias=>label.includes(alias)||region.includes(alias)||ta2.includes(alias));
-   });
+   const found=resolveAnatomyTarget([...structures.values()],target.aliases);
    const status=detail.querySelector('.clinical-focus-status');
    if(found){
-    controls.autoRotate=false;selectStructure(found);searchInput.value=found.label;renderSearch(found.label);
+    controls.autoRotate=false;visualizeAnatomyTargets([target],target.label,'clinical');searchInput.value=found.label;renderSearch(found.label);
     status.textContent='Atlas: se localizó "'+found.label+'". La selección muestra la malla disponible; no implica lesión ni diagnóstico.';
    }else{
     status.textContent='No se encontró una malla identificable para "'+target.label+'" en esta versión del atlas. La estructura se mantiene como referencia anatómica del escenario.';
@@ -373,8 +461,9 @@ function renderClinicalCaseExplorer(){
    if(tractButton){const b=document.createElement('button');b.type='button';b.className='clinical-related-button';b.textContent='Abrir tracto: '+tractButton.querySelector('strong').textContent;b.addEventListener('click',()=>tractButton.click());nav.appendChild(b);}
    detail.querySelector('.clinical-actions').appendChild(nav);
   }
+  if(visualize)visualizeAnatomyTargets(links.structures,clinicalCase.name,'clinical');
  }
- show(clinicalCases[0],host.querySelector('button'));
+ show(clinicalCases[0],host.querySelector('button'),false);
 }
 
 
@@ -668,16 +757,18 @@ function renderCognitiveDomainExplorer(){
  cognitiveDomains.forEach((domain,index)=>{
   const b=document.createElement('button');b.type='button';b.className='network-choice'+(index===0?' active':'');
   b.innerHTML='<strong>'+escapeHtml(domain.name)+'</strong><small>'+escapeHtml(domain.network)+'</small>';
-  b.addEventListener('click',()=>show(domain,b));host.appendChild(b);
+  b.addEventListener('click',()=>show(domain,b,true));host.appendChild(b);
  });
- function show(domain,button){
+ function show(domain,button,visualize=true){
   host.querySelectorAll('button').forEach(b=>b.classList.toggle('active',b===button));
   const tests=domain.tests.map(id=>neuropsychTests.find(t=>t.id===id)).filter(Boolean);
   const testLinks=tests.map(t=>'<button type="button" class="clinical-related-button" data-test-id="'+escapeHtml(t.id)+'">'+escapeHtml(t.name)+'</button>').join('');
   const correlationsList=domain.correlations.map(id=>correlations.find(c=>c.id===id)).filter(Boolean);
   const correlationLinks=correlationsList.map(c=>'<button type="button" class="clinical-related-button" data-correlation-id="'+escapeHtml(c.id)+'">'+escapeHtml(c.name)+'</button>').join('');
   const refs=domain.refs.map(([label,url])=>'<li><a href="'+escapeHtml(url)+'" target="_blank" rel="noopener noreferrer">'+escapeHtml(label)+' ↗</a></li>').join('');
-  detail.innerHTML='<p class="network-tag">DOMINIO COGNITIVO</p><h4>'+escapeHtml(domain.name)+'</h4><p class="muted">'+escapeHtml(domain.definition)+'</p>'+[['Componentes a explorar',domain.components],['Estructuras implicadas',domain.structures.join(' · ')],['Redes funcionales',domain.network],['Manifestaciones y contextos clínicos',domain.clinical],['Consideraciones para la interpretación',domain.interpretation]].map(([heading,value])=>'<section class="network-section"><h5>'+heading+'</h5><p class="muted">'+escapeHtml(value)+'</p></section>').join('')+'<section class="network-section"><h5>Instrumentos relacionados</h5><div class="clinical-actions">'+(testLinks||'<p class="muted">Sin instrumentos vinculados en este catálogo.</p>')+'</div></section><section class="network-section"><h5>Correlaciones anatomoclínicas</h5><div class="clinical-actions">'+(correlationLinks||'<p class="muted">Sin fichas anatómicas vinculadas.</p>')+'</div></section><section class="network-section"><h5>Fuentes y lecturas</h5><ul class="fact-references">'+refs+'</ul></section><p class="correlation-note muted">El dominio no se localiza en una única región. Las tareas reclutan componentes parcialmente superpuestos y su desempeño está modulado por edad, educación, idioma, estado clínico y condiciones sensoriales/motoras.</p>';
+  detail.innerHTML='<p class="network-tag">DOMINIO COGNITIVO</p><h4>'+escapeHtml(domain.name)+'</h4><p class="muted">'+escapeHtml(domain.definition)+'</p><div class="clinical-actions"><button type="button" class="clinical-related-button" id="cognitive-focus">Visualizar componentes en el cerebro 3D</button></div>'+[['Componentes a explorar',domain.components],['Estructuras implicadas',domain.structures.join(' · ')],['Redes funcionales',domain.network],['Manifestaciones y contextos clínicos',domain.clinical],['Consideraciones para la interpretación',domain.interpretation]].map(([heading,value])=>'<section class="network-section"><h5>'+heading+'</h5><p class="muted">'+escapeHtml(value)+'</p></section>').join('')+'<section class="network-section"><h5>Instrumentos relacionados</h5><div class="clinical-actions">'+(testLinks||'<p class="muted">Sin instrumentos vinculados en este catálogo.</p>')+'</div></section><section class="network-section"><h5>Correlaciones anatomoclínicas</h5><div class="clinical-actions">'+(correlationLinks||'<p class="muted">Sin fichas anatómicas vinculadas.</p>')+'</div></section><section class="network-section"><h5>Fuentes y lecturas</h5><ul class="fact-references">'+refs+'</ul></section><p class="correlation-note muted">El dominio no se localiza en una única región. Las tareas reclutan componentes parcialmente superpuestos y su desempeño está modulado por edad, educación, idioma, estado clínico y condiciones sensoriales/motoras.</p>';
+  detail.querySelector('#cognitive-focus')?.addEventListener('click',()=>visualizeAnatomyTargets(cognitiveTargetsFor(domain),domain.name));
+  if(visualize)visualizeAnatomyTargets(domain.structures,domain.name);
   detail.querySelectorAll('[data-test-id]').forEach(b=>b.addEventListener('click',()=>{
    const test=neuropsychTests.find(t=>t.id===b.dataset.testId);const input=document.querySelector('#assessment-search');
    if(input){input.value=test?.name||'';input.dispatchEvent(new Event('input',{bubbles:true}));}
@@ -689,7 +780,7 @@ function renderCognitiveDomainExplorer(){
    target?.click();document.querySelector('#correlation-detail')?.scrollIntoView({behavior:'smooth',block:'nearest'});
   }));
  }
- show(cognitiveDomains[0],host.querySelector('button'));
+ show(cognitiveDomains[0],host.querySelector('button'),false);
 }
 
 
@@ -833,7 +924,7 @@ buttons.forEach(b=>b.addEventListener('click',()=>{
  if(found){controls.autoRotate=false;selectStructure(found);searchInput.value=found.label;renderSearch(found.label);}
 }));
 searchInput?.addEventListener('input',e=>renderSearch(e.target.value));
-document.querySelector('#reset-view').addEventListener('click',()=>{isolateSelected=false;selectedId=null;const isolateButton=document.querySelector('#isolate-structure');isolateButton?.classList.remove('active');isolateButton?.setAttribute('aria-pressed','false');meshes.forEach(m=>{m.material.emissive.setHex(0x000000);m.material.emissiveIntensity=0;applyVisibility(m);});info.innerHTML='<div class="region-kicker">SISTEMA NERVIOSO CENTRAL</div><h2>Seleccioná una región</h2><p class="muted">Explorá el modelo y seleccioná una estructura para consultar su descripción anatómica y funcional.</p>';buttons.forEach(b=>b.classList.remove('selected'));camera.position.set(0,1.1,8.5);controls.target.set(0,0,0);controls.autoRotate=true;controls.update();});
+document.querySelector('#reset-view').addEventListener('click',()=>{clearFunctionalOverlay();isolateSelected=false;selectedId=null;const isolateButton=document.querySelector('#isolate-structure');isolateButton?.classList.remove('active');isolateButton?.setAttribute('aria-pressed','false');meshes.forEach(m=>{m.material.emissive.setHex(0x000000);m.material.emissiveIntensity=0;applyVisibility(m);});info.innerHTML='<div class="region-kicker">SISTEMA NERVIOSO CENTRAL</div><h2>Seleccioná una región</h2><p class="muted">Explorá el modelo y seleccioná una estructura para consultar su descripción anatómica y funcional.</p>';buttons.forEach(b=>b.classList.remove('selected'));camera.position.set(0,1.1,8.5);controls.target.set(0,0,0);controls.autoRotate=true;controls.update();});
 const isolateButton=document.querySelector('#isolate-structure');
 isolateButton?.addEventListener('click',()=>{if(!selectedId)return;isolateSelected=!isolateSelected;isolateButton.classList.toggle('active',isolateSelected);isolateButton.setAttribute('aria-pressed',String(isolateSelected));meshes.forEach(applyVisibility);});
 document.querySelector('#toggle-labels').addEventListener('click',e=>{labelsOn=!labelsOn;e.currentTarget.classList.toggle('active',labelsOn);floorGrid.visible=labelsOn;sectionGuide.visible=labelsOn&&activePlane!=='none';});
@@ -855,13 +946,57 @@ function animate(){requestAnimationFrame(animate);controls.update();renderer.ren
 
 const draco=new DRACOLoader();draco.setDecoderPath(DRACO_URL);
 const loader=new GLTFLoader();loader.setDRACOLoader(draco);
-fetch(MANIFEST_URL).then(response=>{if(!response.ok)throw new Error('Manifest HTTP '+response.status);return response.json();}).then(manifest=>{manifestById=new Map((manifest.nodes||[]).map(node=>[String(node.id),node]));loading.textContent='Metadatos cargados. Descargando geometría 3D…';}).catch(err=>{console.warn('No se pudo cargar el manifiesto anatómico; se usarán metadatos glTF:',err);}).finally(()=>{
- let modelSettled=false;
- const timeout=setTimeout(()=>{if(modelSettled)return;modelSettled=true;console.warn('Tiempo de espera agotado para CDN primaria; se intenta fuente alternativa.');loading.textContent='La descarga tarda más de lo esperado; probando otra fuente…';loadFallback();},18000);
- const loadFallback=()=>{
-  let fallbackSettled=false;
-  const fallbackTimeout=setTimeout(()=>{if(fallbackSettled)return;fallbackSettled=true;showError('Las dos fuentes del modelo anatómico superaron el tiempo de espera. Se activó una representación 3D local simplificada.');},18000);
-  loader.load(MODEL_FALLBACK_URL,gltf=>{if(fallbackSettled)return;fallbackSettled=true;clearTimeout(fallbackTimeout);if(modelSettled&&brain.children.length)return;modelSettled=true;clearTimeout(timeout);registerModel(gltf);},progress=>{if(progress.total)loading.textContent='Reintentando modelo anatómico… '+Math.round(progress.loaded/progress.total*100)+'%';},err=>{if(fallbackSettled)return;fallbackSettled=true;clearTimeout(fallbackTimeout);console.error('Fallaron las dos fuentes del modelo anatómico:',err);modelSettled=true;clearTimeout(timeout);showError('No fue posible descargar el modelo anatómico externo. Se activó una representación 3D local simplificada.');});
- };
- loader.load(MODEL_URL,gltf=>{if(modelSettled)return;modelSettled=true;clearTimeout(timeout);registerModel(gltf);},progress=>{if(progress.total)loading.textContent='Cargando modelo anatómico… '+Math.round(progress.loaded/progress.total*100)+'%';},err=>{if(modelSettled)return;modelSettled=true;clearTimeout(timeout);console.warn('Falló CDN primaria; se intenta fuente alternativa:',err);loading.textContent='Reintentando desde el repositorio de origen…';loadFallback();});
-});
+const manifestController=new AbortController();
+const manifestTimeout=setTimeout(()=>manifestController.abort(),8000);
+const manifestPromise=fetch(MANIFEST_URL,{signal:manifestController.signal})
+ .then(response=>{if(!response.ok)throw new Error('Manifest HTTP '+response.status);return response.json();})
+ .then(manifest=>{manifestById=new Map((manifest.nodes||[]).map(node=>[String(node.id),node]));})
+ .catch(err=>{console.warn('No se pudo cargar el manifiesto anatómico; se continuará con los metadatos del GLB:',err);})
+ .finally(()=>clearTimeout(manifestTimeout));
+
+function downloadAtlasModel(url,onProgress){
+ return new Promise((resolve,reject)=>{
+  let settled=false;
+  const timeout=setTimeout(()=>{
+   if(settled)return;
+   settled=true;
+   reject(new Error('Tiempo de espera agotado al descargar el modelo.'));
+  },18000);
+  loader.load(url,gltf=>{
+   if(settled)return;
+   settled=true;
+   clearTimeout(timeout);
+   resolve(gltf);
+  },progress=>{
+   if(progress.total)onProgress?.(Math.round(progress.loaded/progress.total*100));
+  },error=>{
+   if(settled)return;
+   settled=true;
+   clearTimeout(timeout);
+   reject(error);
+  });
+ });
+}
+
+(async()=>{
+ try{
+  const [gltf]=await Promise.all([
+   downloadAtlasModel(MODEL_URL,percent=>{loading.textContent='Cargando modelo anatómico… '+percent+'%';}),
+   manifestPromise
+  ]);
+  registerModel(gltf);
+ }catch(primaryError){
+  console.warn('Falló la fuente principal del modelo; se intenta la alternativa:',primaryError);
+  loading.textContent='Reintentando desde el repositorio de origen…';
+  try{
+   const [gltf]=await Promise.all([
+    downloadAtlasModel(MODEL_FALLBACK_URL,percent=>{loading.textContent='Reintentando modelo anatómico… '+percent+'%';}),
+    manifestPromise
+   ]);
+   registerModel(gltf);
+  }catch(fallbackError){
+   console.error('Fallaron las dos fuentes del modelo anatómico:',fallbackError);
+   showError('No fue posible descargar el modelo anatómico externo. Se activó una representación 3D local simplificada.');
+  }
+ }
+})();
