@@ -1,5 +1,5 @@
 // Resolución determinista de etiquetas clínicas contra las estructuras realmente cargadas.
-// Prioriza coincidencias en el nombre de la malla sobre región y jerarquía TA2.
+// Solo utiliza nombre de malla y región; evita tratar la jerarquía TA2 como si fuera una malla.
 export function normalizeAnatomyLabel(value) {
   return String(value ?? '')
     .normalize('NFD')
@@ -10,6 +10,10 @@ export function normalizeAnatomyLabel(value) {
     .replace(/\\s+/g, ' ');
 }
 
+function hasWholePhrase(field, term) {
+  return field === term || (field.length > term.length && ((' ' + field + ' ').includes(' ' + term + ' ')));
+}
+
 export function resolveAnatomyTarget(items, aliases = []) {
   const terms = [...new Set(aliases.map(normalizeAnatomyLabel).filter(term => term.length >= 4))];
   if (!terms.length) return null;
@@ -17,15 +21,12 @@ export function resolveAnatomyTarget(items, aliases = []) {
   for (const item of items ?? []) {
     const label = normalizeAnatomyLabel(item.label);
     const region = normalizeAnatomyLabel(item.region);
-    const hierarchy = normalizeAnatomyLabel(Array.isArray(item.ta2) ? item.ta2.join(' ') : item.ta2);
     let score = Infinity;
     for (const term of terms) {
       if (label === term) score = Math.min(score, 0);
-      else if (label.includes(term)) score = Math.min(score, 10 + term.length * -0.01);
+      else if (hasWholePhrase(label, term)) score = Math.min(score, 10 + term.length * -0.01);
       if (region === term) score = Math.min(score, 20);
-      else if (region.includes(term)) score = Math.min(score, 30 + term.length * -0.01);
-      if (hierarchy === term) score = Math.min(score, 40);
-      else if (hierarchy.includes(term)) score = Math.min(score, 50 + term.length * -0.01);
+      else if (hasWholePhrase(region, term)) score = Math.min(score, 30 + term.length * -0.01);
     }
     if (Number.isFinite(score)) ranked.push({ item, score });
   }
