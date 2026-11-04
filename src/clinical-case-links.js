@@ -5,9 +5,9 @@ export const clinicalCaseLinks = {
  ad: {
   structures: [
    {label:"Hipocampo", aliases:["hippocampus","hipocampo"]},
-   {label:"Corteza entorrinal", aliases:["entorhinal","corteza entorrinal"]},
+   {label:"Corteza entorrinal (no segmentada en este modelo)", aliases:["entorhinal cortex"]},
    {label:"Corteza parahipocampal", aliases:["parahippocampal","parahipocampal gyrus","parahipocampal cortex"]},
-   {label:"Tálamo", aliases:["thalamus","tálamo"]}
+   {label:"Núcleos anteriores del tálamo", aliases:["anterior nuclei of thalamus"]}
   ],
   networkId:"medialtemporal",
   tractId:"fornix"
@@ -15,18 +15,18 @@ export const clinicalCaseLinks = {
  tle: {
   structures:[
    {label:"Hipocampo",aliases:["hippocampus","hipocampo"]},
-   {label:"Amígdala",aliases:["amygdala","amígdala"]},
+   {label:"Complejo basolateral amigdalino",aliases:["basolateral complex"]},
    {label:"Corteza entorrinal",aliases:["entorhinal","corteza entorrinal"]},
-   {label:"Tálamo",aliases:["thalamus","tálamo"]}
+   {label:"Núcleos anteriores del tálamo",aliases:["anterior nuclei of thalamus"]}
   ],
   networkId:"limbic",
   tractId:"fornix"
  },
  stroke: {
   structures:[
-   {label:"Cápsula interna",aliases:["internal capsule","cápsula interna"]},
-   {label:"Tálamo",aliases:["thalamus","tálamo"]},
-   {label:"Corteza prefrontal",aliases:["prefrontal cortex","corteza prefrontal"]},
+   {label:"Cápsula interna (no segmentada en este modelo)",aliases:["internal capsule"]},
+   {label:"Núcleos anteriores del tálamo",aliases:["anterior nuclei of thalamus"]},
+   {label:"Giro frontal medio (referencia prefrontal)",aliases:["middle frontal gyrus"]},
    {label:"Cuerpo calloso",aliases:["corpus callosum","cuerpo calloso"]}
   ],
   networkId:"thalamocortical",
@@ -35,7 +35,7 @@ export const clinicalCaseLinks = {
  tbi: {
   structures:[
    {label:"Cuerpo calloso",aliases:["corpus callosum","cuerpo calloso"]},
-   {label:"Cápsula interna",aliases:["internal capsule","cápsula interna"]},
+   {label:"Cápsula interna (no segmentada en este modelo)",aliases:["internal capsule"]},
    {label:"Hipocampo",aliases:["hippocampus","hipocampo"]}
   ],
   networkId:"thalamocortical",
@@ -43,9 +43,9 @@ export const clinicalCaseLinks = {
  },
  ndd: {
   structures:[
-   {label:"Corteza prefrontal",aliases:["prefrontal cortex","corteza prefrontal"]},
+   {label:"Giro frontal medio (referencia prefrontal)",aliases:["middle frontal gyrus"]},
    {label:"Corteza somatosensorial",aliases:["postcentral gyrus","primary somatosensory","somatosensory cortex"]},
-   {label:"Corteza temporal",aliases:["temporal lobe","temporal cortex","lóbulo temporal"]}
+   {label:"Giro temporal medio/superior",aliases:["middle temporal gyrus","superior temporal gyrus"]}
   ],
   networkId:"frontostriatal",
   tractId:"slf"
@@ -54,9 +54,9 @@ export const clinicalCaseLinks = {
 ,
  vci: {
   structures:[
-   {label:"Cápsula interna",aliases:["internal capsule","cápsula interna"]},
-   {label:"Tálamo",aliases:["thalamus","tálamo"]},
-   {label:"Corteza prefrontal",aliases:["prefrontal cortex","corteza prefrontal"]},
+   {label:"Cápsula interna (no segmentada en este modelo)",aliases:["internal capsule"]},
+   {label:"Núcleos anteriores del tálamo",aliases:["anterior nuclei of thalamus"]},
+   {label:"Giro frontal medio (referencia prefrontal)",aliases:["middle frontal gyrus"]},
    {label:"Cuerpo calloso",aliases:["corpus callosum","cuerpo calloso"]}
   ],
   networkId:"thalamocortical",
@@ -64,9 +64,9 @@ export const clinicalCaseLinks = {
  },
  bvftd: {
   structures:[
-   {label:"Corteza prefrontal",aliases:["prefrontal cortex","corteza prefrontal"]},
-   {label:"Amígdala",aliases:["amygdala","amygdaloid complex","amígdala"]},
-   {label:"Corteza temporal",aliases:["superior temporal gyrus","middle temporal gyrus","temporal cortex"]},
+   {label:"Giro frontal medio (referencia prefrontal)",aliases:["middle frontal gyrus"]},
+   {label:"Complejo basolateral amigdalino",aliases:["basolateral complex"]},
+   {label:"Giro temporal medio/superior",aliases:["middle temporal gyrus","superior temporal gyrus"]},
    {label:"Ínsula",aliases:["insula","ínsula"]}
   ],
   networkId:"salience",
@@ -74,10 +74,10 @@ export const clinicalCaseLinks = {
  },
  "pd-cognition": {
   structures:[
-   {label:"Núcleo caudado",aliases:["caudate nucleus","caudate"]},
+   {label:"Núcleo caudado",aliases:["caudate nucleus"]},
    {label:"Putamen",aliases:["putamen"]},
-   {label:"Globo pálido",aliases:["globus pallidus internal","globus pallidus external","globus pallidus"]},
-   {label:"Tálamo",aliases:["thalamus","tálamo"]},
+   {label:"Globo pálido interno (GPi)",aliases:["globus pallidus internal"]},
+   {label:"Núcleos anteriores del tálamo",aliases:["anterior nuclei of thalamus"]},
    {label:"Corteza prefrontal",aliases:["prefrontal cortex","middle frontal gyrus","superior frontal gyrus"]}
   ],
   networkId:"frontostriatal",
