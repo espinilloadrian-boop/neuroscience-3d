@@ -132,6 +132,8 @@ test('las fichas anatómicas reconocen nombres con y sin acentos', () => {
   assert.equal(findStructureFact('tálamo')?.title, 'Tálamo');
   assert.equal(findStructureFact('talamo')?.title, 'Tálamo');
   assert.equal(findStructureFact('hypothalamus'), null);
+  assert.equal(findStructureFact('Insula (Subcentral gyrus and ant. and post. sulci)')?.title, 'Ínsula (malla macroscópica)');
+  assert.equal(findStructureFact('Caudate nucleus')?.title, 'Núcleo caudado');
 });
 
 
