@@ -146,6 +146,40 @@ export const structureFacts = [
       { label: "Gazzaniga — Cerebral specialization and interhemispheric communication (2000)", url: "https://pubmed.ncbi.nlm.nih.gov/10944599/" }
     ]
   }
+
+  ,
+  {
+    match: ["insula subcentral gyrus and ant and post sulci", "insula subcentral gyrus"],
+    title: "Ínsula (malla macroscópica)",
+    location: "Corteza profunda situada en el fondo de la cisura lateral, cubierta por los opérculos frontal, parietal y temporal.",
+    boundaries: "Se organiza en porciones anterior y posterior, con giros cortos anteriores y giros largos posteriores separados por el surco central insular. La malla disponible representa una región macroscópica y no segmenta por separado sus subregiones citoarquitectónicas.",
+    brodmann: "No corresponde asignar un área de Brodmann única: la ínsula presenta organización granular, disgranular y agranular a lo largo de un gradiente anteroposterior.",
+    connections: "Mantiene conexiones recíprocas con cortezas orbitofrontal, cingulada, somatosensorial y temporal, así como con amígdala, tálamo y estriado. La ínsula anterior participa en circuitos de saliencia y control; la posterior presenta mayor vinculación con procesamiento somatosensorial e interoceptivo.",
+    functions: "Contribuye a integrar señales interoceptivas y exteroceptivas, gusto, sensaciones viscerales, procesamiento emocional, saliencia y aspectos de cognición social. Estas funciones dependen de subregiones y redes distribuidas.",
+    clinical: "La afectación insular puede acompañarse de cambios interoceptivos, gustativos, autonómicos, somatosensoriales, emocionales o del lenguaje, según lateralidad y extensión. En epilepsia, la ínsula puede participar en redes epileptógenas y generar semiología variable; no debe inferirse origen insular por un síntoma aislado.",
+    limitation: "La malla del atlas no permite separar ínsula anterior/posterior ni identificar áreas agranulares, disgranulares y granulares. La asociación con la red de saliencia no implica que toda función de saliencia se localice exclusivamente aquí.",
+    references: [
+      { label: "Kittleson et al. — The insula: cellular and systems-level roles (2024)", url: "https://doi.org/10.1016/j.neubiorev.2024.105643" },
+      { label: "The Insula: A Stimulating Island of the Brain (2021)", url: "https://pubmed.ncbi.nlm.nih.gov/34827532/" },
+      { label: "Lotze — Emotional processing impairments after insula lesions (2024)", url: "https://doi.org/10.1016/j.neuroimage.2024.120591" }
+    ]
+  },
+  {
+    match: ["caudate nucleus", "nucleus caudatus", "núcleo caudado"],
+    title: "Núcleo caudado",
+    location: "Núcleo telencefálico profundo con trayecto en C, que acompaña al ventrículo lateral y se relaciona medialmente con el tálamo.",
+    boundaries: "Se distinguen cabeza, cuerpo y cola. La cabeza forma parte de la pared lateral del asta frontal del ventrículo lateral; el cuerpo acompaña su porción central y la cola se prolonga hacia el lóbulo temporal. Junto con el putamen constituye el estriado dorsal.",
+    brodmann: "No corresponde: es sustancia gris subcortical.",
+    connections: "Recibe aferencias glutamatérgicas de múltiples áreas corticales, con organización topográfica frontoestriatal y asociativa. Sus neuronas espinosas medianas GABAérgicas proyectan hacia segmentos del globo pálido y la sustancia negra; participa en bucles cortico-estriado-pálido-talámico-corticales.",
+    functions: "Participa en selección y aprendizaje de acciones, conducta dirigida a metas, actualización de reglas, memoria de trabajo, aprendizaje por retroalimentación y componentes motivacionales. La contribución depende del territorio y de sus conexiones corticales.",
+    clinical: "La lesión vascular del caudado puede asociarse a abulia, alteraciones ejecutivas, conductuales o mnésicas. Su afectación aparece en trastornos de ganglios basales, incluida enfermedad de Huntington y Parkinson, pero el volumen o la señal aislados no permiten establecer etiología.",
+    limitation: "La malla global no distingue cabeza, cuerpo y cola ni sus territorios funcionales. No debe interpretarse el caudado como un módulo cognitivo unitario: sus conexiones son topográficas y parcialmente segregadas, con interacción entre circuitos.",
+    references: [
+      { label: "Driscoll et al. — Neuroanatomy, Nucleus Caudate (StatPearls, 2023)", url: "https://www.ncbi.nlm.nih.gov/books/NBK557407/" },
+      { label: "Graff-Radford et al. — Caudate nucleus as a component of networks controlling behavior (2017)", url: "https://doi.org/10.1212/WNL.0000000000004680" },
+      { label: "Kotz et al. — Internal and external connectivity of the caudate nucleus (2013)", url: "https://doi.org/10.1371/journal.pone.0070141" }
+    ]
+  }
 ];
 
 export function findStructureFact(label) {
