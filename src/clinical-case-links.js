@@ -16,7 +16,7 @@ export const clinicalCaseLinks = {
   structures:[
    {label:"Hipocampo",aliases:["hippocampus","hipocampo"]},
    {label:"Complejo basolateral amigdalino",aliases:["basolateral complex"]},
-   {label:"Corteza entorrinal",aliases:["entorhinal","corteza entorrinal"]},
+   {label:"Corteza entorrinal (no segmentada en este modelo)",aliases:["entorhinal cortex"]},
    {label:"Núcleos anteriores del tálamo",aliases:["anterior nuclei of thalamus"]}
   ],
   networkId:"limbic",
@@ -78,7 +78,7 @@ export const clinicalCaseLinks = {
    {label:"Putamen",aliases:["putamen"]},
    {label:"Globo pálido interno (GPi)",aliases:["globus pallidus internal"]},
    {label:"Núcleos anteriores del tálamo",aliases:["anterior nuclei of thalamus"]},
-   {label:"Corteza prefrontal",aliases:["prefrontal cortex","middle frontal gyrus","superior frontal gyrus"]}
+   {label:"Giro frontal medio (referencia prefrontal)",aliases:["middle frontal gyrus"]}
   ],
   networkId:"frontostriatal",
   tractId:"internal-capsule"
