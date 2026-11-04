@@ -301,7 +301,7 @@ function visualizeAnatomyTargets(terms,caption='Red anatómica',mode='network',e
  if(!resolved.length){if(status)status.textContent='No se encontraron mallas para esta selección en el modelo actual.';return {resolved:[],missing};}
  isolateSelected=false;selectedId=null;
  const isolateButton=document.querySelector('#isolate-structure');isolateButton?.classList.remove('active');isolateButton?.setAttribute('aria-pressed','false');
- resolved.forEach(s=>{if(layerEnabled.get(s.category)===false)layerEnabled.set(s.category,true);s.meshes.forEach(m=>{applyVisibility(m);m.material.emissive.setHex(0x287fa8);m.material.emissiveIntensity=0.82;});});
+ resolved.forEach(s=>{if(layerEnabled.get(s.category)===false)layerEnabled.set(s.category,true);s.meshes.forEach(m=>{applyVisibility(m);m.material.emissive.setHex(0x00bfe8);m.material.emissiveIntensity=1.65;});});
  renderLayerControls();
  const centersByNode=new Map(),allBounds=new THREE.Box3();
  for(const [label,group] of nodeGroups){
@@ -309,7 +309,7 @@ function visualizeAnatomyTargets(terms,caption='Red anatómica',mode='network',e
   group.forEach(s=>{
    const bounds=new THREE.Box3();s.meshes.forEach(m=>bounds.expandByObject(m));if(bounds.isEmpty())return;
    allBounds.union(bounds);const center=bounds.getCenter(new THREE.Vector3()),sphere=bounds.getBoundingSphere(new THREE.Sphere());centers.push({center,side:s.side});
-   const marker=new THREE.Mesh(new THREE.SphereGeometry(THREE.MathUtils.clamp((sphere.radius||0.12)*0.13,0.035,0.085),16,12),new THREE.MeshBasicMaterial({color:0x6bd4f2,depthTest:false,transparent:true,opacity:0.98}));
+   const marker=new THREE.Mesh(new THREE.SphereGeometry(THREE.MathUtils.clamp((sphere.radius||0.12)*0.2,0.09,0.16),20,16),new THREE.MeshBasicMaterial({color:0x00e5ff,depthTest:false,transparent:false}));
    marker.position.copy(center);marker.renderOrder=20;functionalOverlay.add(marker);
   });
   const grouped=new Map();
@@ -324,7 +324,7 @@ function visualizeAnatomyTargets(terms,caption='Red anatómica',mode='network',e
   const left=centersByNode.get(from)||[],right=centersByNode.get(to)||[],pairs=[];
   left.forEach(a=>{const same=right.filter(b=>a.side!=='median'&&b.side===a.side);if(same.length)same.forEach(b=>pairs.push([a,b]));else if(right.length===1&&right[0].side==='median')pairs.push([a,right[0]]);});
   if(!pairs.length&&left.length===1&&left[0].side==='median')right.forEach(b=>pairs.push([left[0],b]));
-  pairs.forEach(([a,b])=>{const geometry=new THREE.BufferGeometry().setFromPoints([a.center,b.center]);const line=new THREE.Line(geometry,new THREE.LineBasicMaterial({color:0x62c5e8,transparent:true,opacity:0.82,depthTest:false}));line.renderOrder=19;functionalOverlay.add(line);drawnEdges++;});
+  pairs.forEach(([a,b])=>{const geometry=new THREE.BufferGeometry().setFromPoints([a.center,b.center]);const line=new THREE.Mesh(new THREE.TubeGeometry(new THREE.LineCurve3(a.center,b.center),24,0.012,8,false),new THREE.MeshBasicMaterial({color:0x00d9ff,transparent:false,depthTest:false}));line.renderOrder=19;functionalOverlay.add(line);drawnEdges++;});
  });
  if(!allBounds.isEmpty()){
   const center=allBounds.getCenter(new THREE.Vector3()),sphere=allBounds.getBoundingSphere(new THREE.Sphere()),direction=camera.position.clone().sub(controls.target);
@@ -356,7 +356,7 @@ function renderNetworkExplorer(){
    const found=resolveNetworkNode(node);
    return '<button type="button" class="network-node" data-node="'+escapeHtml(node)+'" '+(found?'':'disabled aria-disabled="true"')+'>'+escapeHtml(node)+(found?'':' · sin malla específica')+'</button>';
   }).join('');
-  detail.innerHTML='<p class="network-tag">'+escapeHtml(network.tag)+'</p><h4>'+escapeHtml(network.name)+'</h4><p class="muted">'+escapeHtml(network.summary)+'</p><section class="network-section"><h5>Cómo leer este circuito</h5><p class="muted">El recorrido es un esquema funcional basado en bibliografía, no una reconstrucción de conexiones individuales. Solo se habilitan nodos con una correspondencia anatómica suficientemente específica en el atlas; un nodo deshabilitado no cuenta con una malla independiente identificable.</p><p id="network-visual-status" class="clinical-focus-status muted" aria-live="polite">Seleccioná una red para resaltar sus nodos y conexiones anatómicas disponibles.</p></section><section class="network-section"><h5>Recorrido esquemático</h5><p class="muted">'+escapeHtml(network.route)+'</p></section><section class="network-section"><h5>Estructuras relacionadas</h5><div class="network-nodes">'+nodes+'</div></section><section class="network-section"><h5>Funciones</h5><p class="muted">'+escapeHtml(network.function)+'</p></section><section class="network-section"><h5>Correlatos clínicos</h5><p class="muted">'+escapeHtml(network.clinical)+'</p></section><section class="network-section"><h5>Alcance y límites</h5><p class="muted">'+escapeHtml(network.caveat)+'</p></section><section class="network-section"><h5>Bibliografía</h5><ul class="fact-references">'+refs+'</ul></section>';
+  detail.innerHTML='<p class="network-tag">'+escapeHtml(network.tag)+'</p><h4>'+escapeHtml(network.name)+'</h4><p class="muted">'+escapeHtml(network.summary)+'</p><section class="network-section"><h5>Cómo leer este circuito</h5><p class="muted">El recorrido es un esquema funcional basado en bibliografía, no una reconstrucción de conexiones individuales. Solo se habilitan nodos con una correspondencia anatómica suficientemente específica en el atlas; un nodo deshabilitado no cuenta con una malla independiente identificable.</p><p class="network-visual-legend"><span class="network-legend-dot"></span> Regiones resaltadas <span class="network-legend-line"></span> Relaciones funcionales esquemáticas</p><p id="network-visual-status" class="clinical-focus-status muted" aria-live="polite">La selección debe producir un cambio visible en el cerebro 3D. Las regiones resaltadas y las líneas representan nodos y relaciones del circuito.</p></section><section class="network-section"><h5>Recorrido esquemático</h5><p class="muted">'+escapeHtml(network.route)+'</p></section><section class="network-section"><h5>Estructuras relacionadas</h5><div class="network-nodes">'+nodes+'</div></section><section class="network-section"><h5>Funciones</h5><p class="muted">'+escapeHtml(network.function)+'</p></section><section class="network-section"><h5>Correlatos clínicos</h5><p class="muted">'+escapeHtml(network.clinical)+'</p></section><section class="network-section"><h5>Alcance y límites</h5><p class="muted">'+escapeHtml(network.caveat)+'</p></section><section class="network-section"><h5>Bibliografía</h5><ul class="fact-references">'+refs+'</ul></section>';
   detail.querySelectorAll('[data-node]:not(:disabled)').forEach(nodeButton=>nodeButton.addEventListener('click',()=>{
    const term=nodeButton.dataset.node;
    const found=resolveNetworkNodes(term);
