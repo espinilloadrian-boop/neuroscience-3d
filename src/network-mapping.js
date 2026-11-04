@@ -1,6 +1,6 @@
 // Correspondencias explícitas entre nombres funcionales y etiquetas reales del manifiesto anatómico.
 // No se infieren regiones ausentes ni se usan coincidencias por subcadena arbitraria.
-const normalizeNetworkLabel=value=>String(value||'').normalize('NFD').replace(/[\\u0300-\\u036f]/g,'').toLowerCase().replace(/[^a-z0-9]+/g,' ').replace(/\\s+/g,' ').trim();
+const normalizeNetworkLabel=value=>String(value||'').normalize('NFD').replace(/[\u0300-\u036f]/g,'').toLowerCase().replace(/[^a-z0-9]+/g,' ').replace(/\s+/g,' ').trim();
 export const networkNodeAliases={
  "corteza prefrontal":["middle frontal gyrus","superior frontal gyrus","orbital part of inferior frontal gyrus","opercular part of inferior frontal gyrus","triangular part of inferior frontal gyrus"],
  "corteza prefrontal medial":["medial frontal gyrus","anterior cingulate gyrus","cingulate gyrus and sulcus (middle anterior part)"],
