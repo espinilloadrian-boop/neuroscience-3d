@@ -131,6 +131,7 @@ test('cada escenario clínico tiene una guía de lectura multimodal completa', (
 test('las fichas anatómicas reconocen nombres con y sin acentos', () => {
   assert.equal(findStructureFact('tálamo')?.title, 'Tálamo');
   assert.equal(findStructureFact('talamo')?.title, 'Tálamo');
+  assert.equal(findStructureFact('hypothalamus'), null);
 });
 
 
