@@ -71,7 +71,7 @@ const buttons=[...document.querySelectorAll('[data-region]')];
 const searchInput=document.querySelector('#structure-search');
 const searchResults=document.querySelector('#search-results');
 
-function normalise(s){return (s||'').toString().normalize('NFD').replace(/[\u0300-\u036f]/g,'').toLowerCase();}
+function normalise(s){return (s||'').toString().normalize('NFD').replace(/[\u0300-\u036f]/g,'').toLowerCase().replace(/[^a-z0-9]+/g,' ').replace(/\s+/g,' ').trim();}
 function readExtras(o){const chain=[];let node=o;while(node){chain.unshift(node.userData||{});node=node.parent;}return Object.assign({},...chain);}
 function buildFallbackBrain(){
  brain.clear();
@@ -240,14 +240,14 @@ function renderSearch(query){
 }
 
 const networkNodeAliases={
- "corteza prefrontal":["prefrontal cortex","middle frontal gyrus","superior frontal gyrus","orbital part of inferior frontal gyrus","inferior frontal gyrus"],
+ "corteza prefrontal":["middle frontal gyrus","superior frontal gyrus","orbital part of inferior frontal gyrus","opercular part of inferior frontal gyrus","triangular part of inferior frontal gyrus"],
  "corteza prefrontal medial":["medial frontal gyrus","anterior cingulate gyrus","cingulate gyrus and sulcus (middle anterior part)"],
  "corteza prefrontal dorsolateral":["middle frontal gyrus","superior frontal gyrus"],
  "corteza prefrontal lateral":["middle frontal gyrus","superior frontal gyrus","inferior frontal gyrus"],
  "corteza frontal":["middle frontal gyrus","superior frontal gyrus","precentral gyrus"],
  "corteza motora":["precentral gyrus","primary motor cortex"],
  "corteza motora primaria":["precentral gyrus","primary motor cortex"],
- "globo pálido":["globus pallidus internal","globus pallidus external","globus pallidus"],
+ "globo pálido":["globus pallidus internal","globus pallidus external"],
  "fascículo arqueado":["arcuate fasciculus"],
  "fascículo longitudinal superior":["superior longitudinal fascicle"],
  "corteza premotora":["precentral gyrus","middle frontal gyrus","superior frontal gyrus"],
@@ -259,7 +259,7 @@ const networkNodeAliases={
  "surco intraparietal":["intraparietal sulcus"],
  "cíngulo anterior":["cingulate gyrus and sulcus (middle anterior part)","anterior cingulate"],
  "cíngulo anterior dorsal":["cingulate gyrus and sulcus (middle anterior part)"],
- "cíngulo posterior":["cingulate gyrus (posterior dorsal part)","posterior cingulate"],
+ "cíngulo posterior":["cingulate gyrus and sulcus (posterior dorsal part)","cingulate gyrus (posteroventral part)"],
  "ínsula anterior":["insula (subcentral gyrus and ant. and post. sulci)","insula"],
  "ínsula":["insula (subcentral gyrus and ant. and post. sulci)","insula"],
  "precúneo":["precuneus"],
@@ -272,14 +272,14 @@ const networkNodeAliases={
  "estriado":["caudate nucleus","putamen","striatum"],
  "núcleo caudado":["caudate nucleus","caudate"],
  "putamen":["putamen"],
- "tálamo":["thalamus","anterior nuclei of thalamus","mediodorsal nucleus of thalamus","lateral geniculate nucleus","medial geniculate nucleus"],
+ "tálamo":["anterior nuclei of thalamus","lateral geniculate body","medial geniculate body"],
  "hipotálamo":["hypothalamus","anterior hypothalamus","lateral hypothalamus","posterior hypothalamus","tuberal hypothalamus"],
  "cerebelo":["cerebellum"],
  "corteza somatosensorial":["postcentral gyrus","primary somatosensory cortex"],
  "corteza visual":["calcarine sulcus","cuneus","lateral occipital gyrus"],
  "corteza occipital":["calcarine sulcus","cuneus","lateral occipital gyrus"],
  "corteza temporal":["superior temporal gyrus","middle temporal gyrus","inferior temporal gyrus"],
- "corteza auditiva":["transverse temporal gyrus","superior temporal gyrus"],
+ "corteza auditiva":["transverse temporal gyri","superior temporal gyrus (lateral part)"],
  "campos oculares frontales":["frontal eye field"],
  "corteza parahipocampal":["medial occipitotemporal gyrus (parahippocampal)","parahippocampal gyrus"],
  "cuerpo calloso":["corpus callosum"],
@@ -338,34 +338,47 @@ function clearFunctionalOverlay(){
  functionalOverlay.traverse(o=>{if(o.geometry)o.geometry.dispose();if(o.material){if(Array.isArray(o.material))o.material.forEach(m=>m.dispose());else o.material.dispose();}});
  functionalOverlay.clear();
 }
-function visualizeAnatomyTargets(terms,caption='Red anatómica',mode='network'){
- const resolved=[];
+function visualizeAnatomyTargets(terms,caption='Red anatómica',mode='network',edges=[]){
+ const resolved=[],nodeGroups=new Map();
  (terms||[]).forEach(term=>{
-  const found=mode==='clinical'&&Array.isArray(term.aliases)?resolveClinicalNodes(term.aliases):resolveNetworkNodes(typeof term==='string'?term:term.label);
-  found.forEach(s=>{if(!resolved.some(x=>x.id===s.id))resolved.push(s);});
+  const label=typeof term==='string'?term:term.label;
+  const found=mode==='clinical'&&Array.isArray(term.aliases)?resolveClinicalNodes(term.aliases):resolveNetworkNodes(label);
+  nodeGroups.set(label,found);found.forEach(s=>{if(!resolved.some(x=>x.id===s.id))resolved.push(s);});
  });
  clearFunctionalOverlay();meshes.forEach(m=>{m.material.emissive.setHex(0x000000);m.material.emissiveIntensity=0;});
- if(!resolved.length)return {resolved:[],missing:(terms||[]).length};
+ const status=document.querySelector('#network-visual-status')||document.querySelector('#functional-visual-status');
+ const missing=(terms||[]).filter(term=>!(nodeGroups.get(typeof term==='string'?term:term.label)||[]).length).map(term=>typeof term==='string'?term:term.label);
+ if(!resolved.length){if(status)status.textContent='No se encontraron mallas para esta selección en el modelo actual.';return {resolved:[],missing};}
  isolateSelected=false;selectedId=null;
  const isolateButton=document.querySelector('#isolate-structure');isolateButton?.classList.remove('active');isolateButton?.setAttribute('aria-pressed','false');
- resolved.forEach(s=>{if(layerEnabled.get(s.category)===false)layerEnabled.set(s.category,true);s.meshes.forEach(m=>{applyVisibility(m);m.material.emissive.setHex(0x287fa8);m.material.emissiveIntensity=0.72;});});
+ resolved.forEach(s=>{if(layerEnabled.get(s.category)===false)layerEnabled.set(s.category,true);s.meshes.forEach(m=>{applyVisibility(m);m.material.emissive.setHex(0x287fa8);m.material.emissiveIntensity=0.82;});});
  renderLayerControls();
- const points=[],allBounds=new THREE.Box3();
- resolved.forEach(s=>{
-  const bounds=new THREE.Box3();s.meshes.forEach(m=>bounds.expandByObject(m));if(bounds.isEmpty())return;
-  allBounds.union(bounds);const center=bounds.getCenter(new THREE.Vector3()),sphere=bounds.getBoundingSphere(new THREE.Sphere());
-  points.push({center,radius:sphere.radius||0.12});
-  const marker=new THREE.Mesh(new THREE.SphereGeometry(THREE.MathUtils.clamp((sphere.radius||0.12)*0.13,0.035,0.085),16,12),new THREE.MeshBasicMaterial({color:0x6bd4f2,depthTest:false,transparent:true,opacity:0.95}));
-  marker.position.copy(center);marker.renderOrder=20;functionalOverlay.add(marker);
+ const centersByNode=new Map(),allBounds=new THREE.Box3();
+ for(const [label,group] of nodeGroups){
+  const centers=[];
+  group.forEach(s=>{
+   const bounds=new THREE.Box3();s.meshes.forEach(m=>bounds.expandByObject(m));if(bounds.isEmpty())return;
+   allBounds.union(bounds);const center=bounds.getCenter(new THREE.Vector3()),sphere=bounds.getBoundingSphere(new THREE.Sphere());centers.push({center,side:s.side});
+   const marker=new THREE.Mesh(new THREE.SphereGeometry(THREE.MathUtils.clamp((sphere.radius||0.12)*0.13,0.035,0.085),16,12),new THREE.MeshBasicMaterial({color:0x6bd4f2,depthTest:false,transparent:true,opacity:0.98}));
+   marker.position.copy(center);marker.renderOrder=20;functionalOverlay.add(marker);
+  });
+  centersByNode.set(label,centers);
+ }
+ let drawnEdges=0;
+ (edges||[]).forEach(([from,to])=>{
+  const left=centersByNode.get(from)||[],right=centersByNode.get(to)||[],pairs=[];
+  left.forEach(a=>{const same=right.filter(b=>a.side!=='median'&&b.side===a.side);if(same.length)same.forEach(b=>pairs.push([a,b]));else if(right.length===1&&right[0].side==='median')pairs.push([a,right[0]]);});
+  if(!pairs.length&&left.length===1&&left[0].side==='median')right.forEach(b=>pairs.push([left[0],b]));
+  pairs.forEach(([a,b])=>{const geometry=new THREE.BufferGeometry().setFromPoints([a.center,b.center]);const line=new THREE.Line(geometry,new THREE.LineBasicMaterial({color:0x62c5e8,transparent:true,opacity:0.82,depthTest:false}));line.renderOrder=19;functionalOverlay.add(line);drawnEdges++;});
  });
- for(let i=1;i<points.length;i++){const geometry=new THREE.BufferGeometry().setFromPoints([points[i-1].center,points[i].center]);const line=new THREE.Line(geometry,new THREE.LineBasicMaterial({color:0x62c5e8,transparent:true,opacity:0.72,depthTest:false}));line.renderOrder=19;functionalOverlay.add(line);}
  if(!allBounds.isEmpty()){
   const center=allBounds.getCenter(new THREE.Vector3()),sphere=allBounds.getBoundingSphere(new THREE.Sphere()),direction=camera.position.clone().sub(controls.target);
   if(direction.lengthSq()<1e-8)direction.set(0,0,1);direction.normalize();
   const distance=THREE.MathUtils.clamp((sphere.radius||1)*2.8,3.2,12);
   controls.target.copy(center);camera.position.copy(center).addScaledVector(direction,distance);camera.near=Math.max(0.005,distance/1000);camera.far=Math.max(200,distance*30);camera.updateProjectionMatrix();controls.autoRotate=false;controls.update();
  }
- return {resolved,missing:Math.max(0,(terms||[]).length-resolved.length)};
+ if(status){const missingText=missing.length?' · Sin malla: '+missing.join(', '):'';status.textContent=caption+': '+resolved.length+' estructuras resaltadas'+(drawnEdges?' · '+drawnEdges+' conexiones esquemáticas':' · sin conexiones dibujables en esta selección')+missingText+'. Las conexiones son un esquema anatomo-funcional, no tractografía individual.';}
+ return {resolved,missing,drawnEdges};
 }
 
 function renderNetworkExplorer(){
@@ -380,7 +393,7 @@ function renderNetworkExplorer(){
   button.addEventListener('click',()=>showNetwork(network,button,true));
   host.appendChild(button);
  });
- showNetwork(networks[0],host.querySelector('button'),false);
+ showNetwork(networks[0],host.querySelector('button'),true);
  function showNetwork(network,button,visualize=true){
   host.querySelectorAll('button').forEach(b=>b.classList.toggle('active',b===button));
   const refs=network.refs.map(([label,url])=>'<li><a href="'+escapeHtml(url)+'" target="_blank" rel="noopener noreferrer">'+escapeHtml(label)+' ↗</a></li>').join('');
@@ -388,13 +401,13 @@ function renderNetworkExplorer(){
    const found=resolveNetworkNode(node);
    return '<button type="button" class="network-node" data-node="'+escapeHtml(node)+'" '+(found?'':'disabled aria-disabled="true"')+'>'+escapeHtml(node)+(found?'':' · sin malla específica')+'</button>';
   }).join('');
-  detail.innerHTML='<p class="network-tag">'+escapeHtml(network.tag)+'</p><h4>'+escapeHtml(network.name)+'</h4><p class="muted">'+escapeHtml(network.summary)+'</p><section class="network-section"><h5>Cómo leer este circuito</h5><p class="muted">El recorrido es un esquema funcional basado en bibliografía, no una reconstrucción de conexiones individuales. Solo se habilitan nodos con una correspondencia anatómica suficientemente específica en el atlas; un nodo deshabilitado no cuenta con una malla independiente identificable.</p></section><section class="network-section"><h5>Recorrido esquemático</h5><p class="muted">'+escapeHtml(network.route)+'</p></section><section class="network-section"><h5>Estructuras relacionadas</h5><div class="network-nodes">'+nodes+'</div></section><section class="network-section"><h5>Funciones</h5><p class="muted">'+escapeHtml(network.function)+'</p></section><section class="network-section"><h5>Correlatos clínicos</h5><p class="muted">'+escapeHtml(network.clinical)+'</p></section><section class="network-section"><h5>Alcance y límites</h5><p class="muted">'+escapeHtml(network.caveat)+'</p></section><section class="network-section"><h5>Bibliografía</h5><ul class="fact-references">'+refs+'</ul></section>';
+  detail.innerHTML='<p class="network-tag">'+escapeHtml(network.tag)+'</p><h4>'+escapeHtml(network.name)+'</h4><p class="muted">'+escapeHtml(network.summary)+'</p><section class="network-section"><h5>Cómo leer este circuito</h5><p class="muted">El recorrido es un esquema funcional basado en bibliografía, no una reconstrucción de conexiones individuales. Solo se habilitan nodos con una correspondencia anatómica suficientemente específica en el atlas; un nodo deshabilitado no cuenta con una malla independiente identificable.</p><p id="network-visual-status" class="clinical-focus-status muted" aria-live="polite">Seleccioná una red para resaltar sus nodos y conexiones anatómicas disponibles.</p></section><section class="network-section"><h5>Recorrido esquemático</h5><p class="muted">'+escapeHtml(network.route)+'</p></section><section class="network-section"><h5>Estructuras relacionadas</h5><div class="network-nodes">'+nodes+'</div></section><section class="network-section"><h5>Funciones</h5><p class="muted">'+escapeHtml(network.function)+'</p></section><section class="network-section"><h5>Correlatos clínicos</h5><p class="muted">'+escapeHtml(network.clinical)+'</p></section><section class="network-section"><h5>Alcance y límites</h5><p class="muted">'+escapeHtml(network.caveat)+'</p></section><section class="network-section"><h5>Bibliografía</h5><ul class="fact-references">'+refs+'</ul></section>';
   detail.querySelectorAll('[data-node]:not(:disabled)').forEach(nodeButton=>nodeButton.addEventListener('click',()=>{
    const term=nodeButton.dataset.node;
    const found=resolveNetworkNodes(term);
    if(found.length){searchInput.value=term;renderSearch(term);controls.autoRotate=false;visualizeAnatomyTargets([term],term);}
   }));
-  if(visualize)visualizeAnatomyTargets(network.nodes,network.name);
+  if(visualize)visualizeAnatomyTargets(network.nodes,network.name,'network',network.edges||[]);
  }
 }
 
